@@ -1,7 +1,5 @@
-#make:
-#	g++ -I /usr/local/include -std=c++20 -o main main.cpp -L.  -lmuparserx
 CXXFLAGS = -std=c++20
-CPPFLAGS = -DNDEBUG -I ./include
+CPPFLAGS = -I ./include -I/usr/include -I/usr/include/x86_64-linux-gnu/ # I am not able to include <nlohmann/json>
 LDFLAGS = -L. -Wl,-rpath=${PWD}
 LIBS = -lmuparserx
 

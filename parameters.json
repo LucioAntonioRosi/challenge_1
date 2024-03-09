@@ -1,0 +1,10 @@
+{
+    "a0": 0.0,
+    "decay": {
+        "string1": "Exponential",
+        "string2": "Inverse",
+        "string3": "Armijo"
+    },
+    "sigma": 0.0,
+    "iter": 0
+}

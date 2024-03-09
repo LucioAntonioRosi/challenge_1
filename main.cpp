@@ -1,4 +1,9 @@
-#include <iostream>
+#include <cmath>    // (for sqrt)
+#include <iostream> // input output
+#include <tuple>
+#include <fstream>
+#include <vector>
+#include "nlohmann/json.hpp"
 #include "mpParser.h"
 
 using namespace mup;
@@ -46,5 +51,26 @@ int main()
     // Print the minimum value
     std::cout << "Minimum value: " << minimum << std::endl;
 
+     std::ifstream file("parameters.json");
+
+    // Parse the JSON file
+    nlohmann::json j;
+    file >> j;
+
+    // Get the parameters
+    double a0 = j["a0"];
+    std::string decay_string1 = j["decay"]["string1"];
+    std::string decay_string2 = j["decay"]["string2"];
+    std::string decay_string3 = j["decay"]["string3"];
+    double sigma = j["sigma"];
+    int iter = j["iter"];
+
+    // Print the parameters
+    std::cout << "a0: " << a0 << std::endl;
+    std::cout << "decay_string1: " << decay_string1 << std::endl;
+    std::cout << "decay_string2: " << decay_string2 << std::endl;
+    std::cout << "decay_string3: " << decay_string3 << std::endl;
+    std::cout << "sigma: " << sigma << std::endl;
+    std::cout << "iter: " << iter << std::endl;
     return 0;
 }
