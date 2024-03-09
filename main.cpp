@@ -1,10 +1,13 @@
 #include <iostream>
-#include <vector>
-#include <cmath>
-
 #include "mpParser.h"
+
 using namespace mup;
+
+// #include <vector>
+// #include <cmath>
+
 // Function to compute the minimum of a function
+
 double computeMinimum()
 {
    // Create a parser
@@ -29,9 +32,7 @@ std::getline(std::cin, function);
 // Set the function
 parser.SetExpr(function);
 
-
-
-    // Placeholder return value
+ // Placeholder return value
     Value result = parser.Eval();
     std::cout << "Result: " << result << std::endl;
     return 0;
