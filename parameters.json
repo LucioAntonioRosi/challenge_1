@@ -1,12 +1,9 @@
 {
-    "a0": 2.0,
+    "a0": 0.5,
     "dim": 2,
-    "decay": {
-        "type1": "Exponential",
-        "type2": "Inverse",
-        "type3": "Armijo"
-    },
     "gradient": "y",
     "sigma": 0.2,
+    "tol_r": 1e-6,
+    "tol_s": 1e-6,
     "iter": 10000
 }
