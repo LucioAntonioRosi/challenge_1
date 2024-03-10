@@ -2,11 +2,11 @@
     "a0": 2.0,
     "dim": 2,
     "decay": {
-        "string1": "Exponential",
-        "string2": "Inverse",
-        "string3": "Armijo"
+        "type1": "Exponential",
+        "type2": "Inverse",
+        "type3": "Armijo"
     },
-    "gradient": "y",
+    "gradient": "n",
     "sigma": 0.2,
     "iter": 10000
 }
