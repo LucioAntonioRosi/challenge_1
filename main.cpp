@@ -19,6 +19,18 @@ struct Parameters {
     int iter;
 };
 
+// Define the enum
+enum DecayType 
+{
+    Exponential,
+    Inverse,
+    Armijo,
+    Unknown
+};
+
+template<DecayType decayType>
+void handleDecay();
+
 int main()
 {
     std::ifstream file("parameters.json");
@@ -69,41 +81,79 @@ parameters.iter = j["iter"];
     std::cout << "Variable defined: " <<varName << std::endl;
 }
 
-    for (int i = 0; i < parameters.dim; ++i) {
-        parserVec.push_back(parser);
+for (int i = 0; i < parameters.dim; ++i) 
+{
+    parserVec.push_back(parser);
+}
+
+// Open the file
+std::ifstream file_fun("function.txt");
+if (!file_fun) {
+    std::cerr << "Unable to open file function.txt";
+    exit(1);   // call system to stop
+}
+
+// Read the function from the file
+std::string line;
+std::getline(file_fun, line); // Skip the "//function" line
+std::getline(file_fun, line); // Read the function
+parser.SetExpr(line);
+
+// Read the gradient from the file
+if (parameters.gradient == "y") 
+{
+    std::cout << "You want to define the gradient by yourself: "<< std::endl;
+    std::getline(file_fun, line); // Skip the "//gradient" line
+    for (int i = 0; i < parameters.dim; ++i) 
+    {
+        std::getline(file_fun, line); // Read a gradient function
+        parserVec[i].SetExpr(line);
     }
+}
+else
+{
+   std::cout << "We will provide a gradient for you..." << std::endl;
+}
+
+// Evaluate the function
+mup::Value functionValue = parser.Eval();
+std::cout << "Function value: " << functionValue.GetFloat() << std::endl;
+
+// Evaluate the gradient
+std::vector<double> gradientValues(parameters.dim);
+for (int i = 0; i < parameters.dim; ++i) {
+    mup::Value gradientValue = parserVec[i].Eval();
+    gradientValues[i] = gradientValue.GetFloat();
+    std::cout << "Gradient value " << i << ": " << gradientValues[i] << std::endl;
+}
+
+// Close the file
+file.close();
     
-    std::string function;
-    std::cout << "Enter a function in " << parameters.dim << " variables (x0, x1, x2, ...): ";
-    std::getline(std::cin, function);
-    parser.SetExpr(function);
+    // std::string function;
+    // std::cout << "Enter a function in " << parameters.dim << " variables (x0, x1, x2, ...): ";
+    // std::getline(std::cin, function);
+    // parser.SetExpr(function);
 
     // Define the gradient
-    if (parameters.gradient == "y")
-    {
-        std::cout << "You want to define the gradient by yourself: "<< std::endl;
-        for (std::size_t i = 0; i < parameters.dim; ++i)
-        {
-            std::cout << "Enter a function in " << parameters.dim << "  variables (x0, x1, x2, ...): ";
-            std::getline(std::cin, function);
-            parserVec[i].SetExpr(function);
-        }
-        std::cout << "Gradient defined..." << std::endl;
-    }
-    else
-    {
-        std::cout << "We will provide a gradient for you..." << std::endl;
-    }
+
+    // if (parameters.gradient == "y")
+    // {
+    //     std::cout << "You want to define the gradient by yourself: "<< std::endl;
+    //     for (std::size_t i = 0; i < parameters.dim; ++i)
+    //     {
+    //         std::cout << "Enter a function in " << parameters.dim << "  variables (x0, x1, x2, ...): ";
+    //         std::getline(std::cin, function);
+    //         parserVec[i].SetExpr(function);
+    //     }
+    //     std::cout << "Gradient defined..." << std::endl;
+    // }
+    // else
+    // {
+    //     std::cout << "We will provide a gradient for you..." << std::endl;
+    // }
 
 
-    // Define the enum
-enum DecayType 
-{
-    Exponential,
-    Inverse,
-    Armijo,
-    Unknown
-};
 
 // Convert the decay string to a DecayType
 std::string decayString;
@@ -147,6 +197,22 @@ switch (decayType) {
 }
 
 
+template<DecayType decayType>
+void handleDecay() {
+    if constexpr (decayType == DecayType::Exponential) {
+        std::cout << "Handling Exponential decay" << std::endl;
+        // Handle Exponential decay
+    } else if constexpr (decayType == DecayType::Inverse) {
+        std::cout << "Handling Inverse decay" << std::endl;
+        // Handle Inverse decay
+    } else if constexpr (decayType == DecayType::Armijo) {
+        std::cout << "Handling Armijo decay" << std::endl;
+        // Handle Armijo decay
+    } else {
+        std::cout << "Unknown decay type" << std::endl;
+        // Handle unknown decay type
+    }
+}
 
 
 

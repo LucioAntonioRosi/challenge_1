@@ -6,7 +6,7 @@
         "type2": "Inverse",
         "type3": "Armijo"
     },
-    "gradient": "n",
+    "gradient": "y",
     "sigma": 0.2,
     "iter": 10000
 }
