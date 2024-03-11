@@ -2,9 +2,8 @@
 #include <iostream> 
 #include <tuple>
 #include <fstream>
-#include <vector>
 #include <nlohmann/json.hpp>
-#include "mpParser.h"
+#include "my_parser.hpp"
 
 using namespace mup;
 
@@ -13,7 +12,6 @@ using namespace mup;
 constexpr float mu = 0.2;
 
 // Define the structs
-
 struct Parameters 
 {
     float a0;
@@ -44,8 +42,14 @@ enum DecayType
     Unknown
 };
 
+// Choose your decay type
+
+constexpr DecayType decay = DecayType::Exponential;
+
+// Define the function to handle the decay
+
 template<DecayType decayType>
-void handleDecay(double &,int);
+float handleDecay(float, float, int, std::vector<Value>&, const mup::ParserX&, std::vector<double>);
 
 double distance(const std::vector<double>&, const std::vector<double>&);
 
@@ -74,14 +78,14 @@ int main()
     parameters.tol_s = j["tol_s"];
     parameters.iter = j["iter"];
 
-    Solution sol(ComputeMinimum<2>(parameters));
+    Solution sol(ComputeMinimum<decay>(parameters));
 
     return 0;
 }
 
 
 template<DecayType decayType>
-float handleDecay(float alpha0, float sigma, int k, std::vector<Value>& values, const ParserX& parser, std::vector<double> grad_evals)
+float handleDecay(float alpha0, float sigma, int k, std::vector<Value>& values, const mup::ParserX& parser, std::vector<double> grad_evals)
 {
     float alpha;
     if constexpr (decayType == DecayType::Exponential) {
@@ -93,7 +97,7 @@ float handleDecay(float alpha0, float sigma, int k, std::vector<Value>& values, 
         std::cout << "Handling Inverse decay" << std::endl;
         // Handle Inverse decay
     } else if constexpr (decayType == DecayType::Armijo) {
-        if ()
+        
         std::cout << "Handling Armijo decay" << std::endl;
         // Handle Armijo decay
     } else {
@@ -108,48 +112,50 @@ Solution ComputeMinimum(const Parameters& parameters)
 {
     // Create a parser and a parser vector (we will use them to define the function and the gradient)
 
-    ParserX parser(pckALL_NON_COMPLEX);
-    std::vector<ParserX> parserVec;
-    parserVec.reserve(parameters.dim);
+    // ParserX parser(pckALL_NON_COMPLEX);
+    // std::vector<ParserX> parserVec;
+    // parserVec.reserve(parameters.dim);
 
     // I am also defining a parserVec to store the gradient functions
     
-    ParserX parseraux(pckALL_NON_COMPLEX);
+    // ParserX parseraux(pckALL_NON_COMPLEX);
     
     // Define the values and the variables
     
-    std::vector<mup::Value> values;
-    values.resize(parameters.dim,0.0);
-    std::vector<mup::Variable> variables;
-    std::vector<mup::Value> valuesVec;
-    valuesVec.resize(parameters.dim,0.0);
-    std::vector<mup::Variable> variablesVec;
+    // std::vector<mup::Value> values;
+    // values.resize(parameters.dim,0.0);
+    // std::vector<mup::Variable> variables;
+    // std::vector<mup::Value> valuesVec;
+    // valuesVec.resize(parameters.dim,0.0);
+    // std::vector<mup::Variable> variablesVec;
     
     // Define the variables in parser
     
-    for (int i = 0; i < parameters.dim; ++i) 
-    { 
-        // Add the variables to the vectors
+    // for (int i = 0; i < parameters.dim; ++i) 
+    // { 
+    //     // Add the variables to the vectors
 
-        variables.push_back(&values[i]);
-        variablesVec.push_back(&valuesVec[i]);
+    //     variables.push_back(&values[i]);
+    //     variablesVec.push_back(&valuesVec[i]);
 
-        // Define the variables in the parser and parserVec
+    //     // Define the variables in the parser and parserVec
 
-        std::string varName = "x" + std::to_string(i);
-        parser.DefineVar(varName, variables[i]);
-        parseraux.DefineVar(varName, variablesVec[i]);
-        std::cout << "Variable defined: " <<varName << std::endl;
-    }
+    //     std::string varName = "x" + std::to_string(i);
+    //     parser.DefineVar(varName, variables[i]);
+    //     parseraux.DefineVar(varName, variablesVec[i]);
+    //     std::cout << "Variable defined: " <<varName << std::endl;
+    // }
 
     // I DON'T KNOW WHY BUT IF I PUT PARSERVEC INSIDE THE FOR ABOVE IT DOES NOT WORK
 
-    for (int i = 0; i < parameters.dim; ++i)
-    {
-        parserVec.push_back(parseraux);
-    }
+    // for (int i = 0; i < parameters.dim; ++i)
+    // {
+    //     parserVec.push_back(parseraux);
+    // }
 
     // Pass everything from the file
+
+    my_Parser parser(parameters.dim);
 
     std::vector<double> x0;
 
@@ -218,35 +224,35 @@ std::cout << '\n';
             gradientValues_x0[i] = parserVec[i].Eval().GetFloat();
         }
         
-        alpha = handleDecay(parameters.a0, k, values, parser, grad_evals);
+        alpha = handleDecay<decayType>(parameters.a0,parameters.sigma, k, values, parser, gradientValues_x0);
 
         for (int i = 0; i < parameters.dim; ++i){
             x1[i] = valuesVec[i].GetFloat() - alpha * gradientValues_x0[i];
         }
         // Print gradientValues_x0
-        std::cout << "GradientValues: ";
-        for (const auto& value : gradientValues_x0) 
-        {
-            std::cout << value << ' ';
-        }
-        std::cout << '\n';
+        //std::cout << "GradientValues: ";
+        // for (const auto& value : gradientValues_x0) 
+        // {
+        //     std::cout << value << ' ';
+        // }
+        // std::cout << '\n';
 
 
          // Print values
-        std::cout << "values: ";
-        for (const auto& value : values) 
-        {
-            std::cout << value << ' ';
-        }
-        std::cout << '\n';
+        // std::cout << "values: ";
+        // for (const auto& value : values) 
+        // {
+        //     std::cout << value << ' ';
+        // }
+        // std::cout << '\n';
 
         // Print valuesVec
-        std::cout << "valuesVec: ";
-        for (const auto& value : valuesVec) 
-        {
-            std::cout << value.GetFloat() << ' ';
-        }
-        std::cout << '\n';
+        // std::cout << "valuesVec: ";
+        // for (const auto& value : valuesVec) 
+        // {
+        //     std::cout << value.GetFloat() << ' ';
+        // }
+        // std::cout << '\n';
 
         if (distance(x1, x0) < parameters.tol_r ||
          std::sqrt(std::inner_product(gradientValues_x0.begin(), gradientValues_x0.end(), gradientValues_x0.begin(), 0.0)) < parameters.tol_s) 
@@ -275,7 +281,7 @@ std::cout << '\n';
     }
     else
     {
-        std::cout << "The algorithm converged in " << k << " iterations: " << std::endl;
+        std::cout << "The algorithm converged in " << k << " iterations with value: " <<parser.Eval().GetFloat() << std::endl;
         
         for (int i = 0; i < parameters.dim; ++i) 
         {
