@@ -1,4 +1,4 @@
-#include "my_parser.hpp"
+#include "include/my_parser.hpp"
 
     my_Parser::my_Parser(int n) : fun(mup::pckALL_NON_COMPLEX), grad(n, mup::ParserX(mup::pckALL_NON_COMPLEX)),values(n, mup::Value(0.0))
     {
@@ -18,12 +18,12 @@
         }
     }
 
-    void setFunction(const std::string& expression)
+    void my_Parser::setFunction(const std::string& expression)
     {
         fun.SetExpr(expression);
     }
 
-    void setGradientFunction(int index, const std::string& expression)
+    void my_Parser::setGradientFunction(int index, const std::string& expression)
      {
         if (index >= 0 && index < grad.size()) {
             grad[index].SetExpr(expression);
@@ -32,7 +32,7 @@
         }
     }
 
-    void setValues(const std::vector<double>& args) 
+    void my_Parser::setValues(const std::vector<double>& args) 
     {
         for (int i = 0; i < args.size(); ++i) {
             values[i] = args[i];
@@ -41,7 +41,7 @@
 
 
 
-    std::vector<double> getValues() 
+    std::vector<double> my_Parser::getValues() 
     {
         std::vector<double> result;
         result.reserve(values.size());
@@ -53,14 +53,14 @@
 
 
 
-    double evaluateFunction()
+    double my_Parser::evaluateFunction()
     {
         return fun.Eval().GetFloat();
     }
 
 
 
-    double evaluateFunction(const std::vector<double>& args) 
+    double my_Parser::evaluateFunction(const std::vector<double>& args) 
     {
         setValues(args);
         return fun.Eval().GetFloat();
@@ -68,7 +68,7 @@
 
 
 
-    std::vector<double> evaluateGradientFunction(const std::vector<double>& args) 
+    std::vector<double> my_Parser::evaluateGradientFunction(const std::vector<double>& args) 
     {
         setValues(args);
         std::vector<double> result;
@@ -82,7 +82,7 @@
     
 
 
-    std::vector<double> evaluateGradientFunction() 
+    std::vector<double> my_Parser::evaluateGradientFunction() 
     {
         std::vector<double> result;
         result.reserve(grad.size());
@@ -92,3 +92,22 @@
         }
         return result;
     }
+
+    void my_Parser::printParser() {
+    // Print the vector of values
+    std::cout << "Values: ";
+    for (const auto& value : values) {
+        std::cout << value.GetFloat() << ' ';
+    }
+    std::cout << '\n';
+
+    // Print the fun expression
+    std::cout << "Function: " << fun.GetExpr() << '\n';
+
+    // Print the gradient expressions
+    std::cout << "Gradient: ";
+    for (const auto& parser : grad) {
+        std::cout << parser.GetExpr() << std::endl;
+    }
+    std::cout << '\n';
+}

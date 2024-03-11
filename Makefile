@@ -4,14 +4,16 @@ LDFLAGS = -L. -Wl,-rpath=${PWD}
 LIBS = -lmuparserx
 
 .phony= all clean distclean
+
 .DEFAULT_GOAL = all
+
 all: main
 
-main: main.o
-	$(CXX) $(LDFLAGS) main.o -o main $(LIBS)
+main: main.o my_parser.o
+	$(CXX) $(LDFLAGS) $^ -o $@ $(LIBS)
 
-main.o: main.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c main.cpp
+%.o: %.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	$(RM) *.o

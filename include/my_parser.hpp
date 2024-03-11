@@ -10,8 +10,8 @@
 // Declare any global constants or macros here
 
 // Declare any classes or structs here
-
-class my_Parser {
+class my_Parser 
+{
 private:
     mup::ParserX fun;
     std::vector<mup::ParserX> grad;
@@ -28,8 +28,9 @@ public:
     double evaluateFunction();
     double evaluateFunction(const std::vector<double>& args); 
     std::vector<double> evaluateGradientFunction(const std::vector<double>& args);
-    std::vector<double> evaluateGradientFunction(); 
-}
+    std::vector<double> evaluateGradientFunction();
+    void printParser(); 
+};
 
 
 #endif // MY_PARSER_HPP

@@ -49,11 +49,11 @@ constexpr DecayType decay = DecayType::Exponential;
 // Define the function to handle the decay
 
 template<DecayType decayType>
-float handleDecay(float, float, int, std::vector<Value>&, const mup::ParserX&, std::vector<double>);
+float handleDecay(const Parameters &, int, my_Parser &, const std::vector<double> &);
 
 double distance(const std::vector<double>&, const std::vector<double>&);
 
-void readFunctionAndGradient(std::vector<double>&, mup::ParserX&, std::vector<mup::ParserX>&, const Parameters&);
+void readFunctionAndGradient(std::vector<double>&, my_Parser &, const Parameters &);
 
 template<DecayType decayType>
 Solution ComputeMinimum(const Parameters&);
@@ -83,17 +83,16 @@ int main()
     return 0;
 }
 
-
 template<DecayType decayType>
-float handleDecay(float alpha0, float sigma, int k, std::vector<Value>& values, const mup::ParserX& parser, std::vector<double> grad_evals)
+float handleDecay(const Parameters & parameters, int k, my_Parser & parser, const std::vector<double> & grad_evals)
 {
     float alpha;
     if constexpr (decayType == DecayType::Exponential) {
-        return alpha0 * std::exp(-mu * k);
+        return parameters.a0 * std::exp(-mu * k);
         std::cout << "alpha now has value: " << alpha<< std::endl;
         // Handle Exponential decay
     } else if constexpr (decayType == DecayType::Inverse) {
-        return alpha0/(1 + mu * k);
+        return parameters.a0/(1 + mu * k);
         std::cout << "Handling Inverse decay" << std::endl;
         // Handle Inverse decay
     } else if constexpr (decayType == DecayType::Armijo) {
@@ -159,76 +158,78 @@ Solution ComputeMinimum(const Parameters& parameters)
 
     std::vector<double> x0;
 
-    readFunctionAndGradient(x0, parser, parserVec, parameters);
+    readFunctionAndGradient(x0, parser, parameters);
 
 
-std::cout << "\n\n\n";
-    // Print x0
-std::cout << "x0: ";
-for (const auto& value : x0) {
-    std::cout << value << ' ';
-}
-std::cout << '\n';
+// std::cout << "\n\n\n";
+//     // Print x0
+// std::cout << "x0: ";
+// for (const auto& value : x0) {
+//     std::cout << value << ' ';
+// }
+// std::cout << '\n';
 
 // Print the evaluation of parser
-std::cout << "parser evaluation: " << parser.Eval().GetFloat() << '\n';
+// std::cout << "parser evaluation: " << parser.Eval().GetFloat() << '\n';
 
 
-// Print the evaluations of parserVec
-std::cout << "parserVec evaluations: ";
-for (const auto& p : parserVec) {
-    std::cout << p.Eval().GetFloat() << ' ';
-    std::cout << "Expression: " << p.GetExpr() << std::endl;
-}
-std::cout << '\n';
+// // Print the evaluations of parserVec
+// std::cout << "parserVec evaluations: ";
+// for (const auto& p : parserVec) {
+//     std::cout << p.Eval().GetFloat() << ' ';
+//     std::cout << "Expression: " << p.GetExpr() << std::endl;
+// }
+// std::cout << '\n';
 
 
-    // Define the values of the variables
+    // Set the values of the variables
     
-    for (int i = 0; i < parameters.dim; ++i) 
-    {
-        values[i] = x0[i];
-        valuesVec[i] = x0[i];
-    }
+    parser.setValues(x0);
 
- // Print values
-std::cout << "values: ";
-for (const auto& value : values) {
-    std::cout << value << ' ';
-}
-std::cout << '\n';
+    parser.printParser();
 
-// Print valuesVec
-std::cout << "valuesVec: ";
-for (const auto& value : valuesVec) {
-    std::cout << value.GetFloat() << ' ';
-}
-std::cout << '\n';
+//  // Print values
+// std::cout << "values: ";
+// for (const auto& value : values) {
+//     std::cout << value << ' ';
+// }
+// std::cout << '\n';
+
+// // Print valuesVec
+// std::cout << "valuesVec: ";
+// for (const auto& value : valuesVec) {
+//     std::cout << value.GetFloat() << ' ';
+// }
+// std::cout << '\n';
     
 
     // Define the parameters of the algorithm
     
-    float alpha = parameters.a0;
     int k = 0;
+
     while(k < parameters.iter){
 
         std::vector<double> x1(parameters.dim);
 
         // Step 1: Evaluate the gradient at x0 and compute x1
 
-        std::vector<double> gradientValues_x0(parameters.dim);
+        std::vector<double> gradientValues_x0(parser.evaluateGradientFunction(parser.getValues()));
 
         for (int i = 0; i < parameters.dim; ++i) 
         {
-            x0[i] = valuesVec[i];
-            gradientValues_x0[i] = parserVec[i].Eval().GetFloat();
+            x0[i] = parser.getValues()[i]; 
         }
-        
-        alpha = handleDecay<decayType>(parameters.a0,parameters.sigma, k, values, parser, gradientValues_x0);
+
+        std::cout << "x0: " << x0[0] << " " << x0[1] << std::endl;
+
+        float alpha = handleDecay<decayType>(parameters, k, parser, gradientValues_x0);
 
         for (int i = 0; i < parameters.dim; ++i){
-            x1[i] = valuesVec[i].GetFloat() - alpha * gradientValues_x0[i];
+            x1[i] = x0[i] - alpha * gradientValues_x0[i];
         }
+
+        std::cout << "x1: " << x1[0] << " " << x1[1] << std::endl;
+
         // Print gradientValues_x0
         //std::cout << "GradientValues: ";
         // for (const auto& value : gradientValues_x0) 
@@ -254,8 +255,11 @@ std::cout << '\n';
         // }
         // std::cout << '\n';
 
-        if (distance(x1, x0) < parameters.tol_r ||
-         std::sqrt(std::inner_product(gradientValues_x0.begin(), gradientValues_x0.end(), gradientValues_x0.begin(), 0.0)) < parameters.tol_s) 
+        // Define the norm of the gradient
+
+        double grad_norm_x0 = std::sqrt(std::inner_product(gradientValues_x0.begin(), gradientValues_x0.end(), gradientValues_x0.begin(), 0.0));
+
+        if (distance(x1, x0) < parameters.tol_r || grad_norm_x0 < parameters.tol_s) 
         {
             break;
         }
@@ -266,11 +270,10 @@ std::cout << '\n';
 
         // Step 3: Update the variables
 
-        for (int i = 0; i < parameters.dim; ++i) 
-        {
-            values[i] = x1[i];
-            valuesVec[i] = x1[i];
-        }
+        parser.setValues(x1);
+
+        std::cout << "Values: " << parser.getValues()[0] << " " << parser.getValues()[1] << std::endl;
+
     }
     
     Solution solution;
@@ -281,8 +284,14 @@ std::cout << '\n';
     }
     else
     {
-        std::cout << "The algorithm converged in " << k << " iterations with value: " <<parser.Eval().GetFloat() << std::endl;
+        std::cout << "The algorithm converged in " << k << " iterations with value: " << parser.evaluateFunction(x0) << std::endl;
         
+        std::vector<double> aux(parameters.dim,1.0);
+
+        parser.setValues(aux);
+
+        parser.printParser();
+
         for (int i = 0; i < parameters.dim; ++i) 
         {
             solution.minimum_coords.push_back(x0[i]);
@@ -292,7 +301,7 @@ std::cout << '\n';
 }
 
 
-void readFunctionAndGradient(std::vector<double>& initialConditions, mup::ParserX& parser, std::vector<mup::ParserX>& parserVec, const Parameters& parameters) {
+void readFunctionAndGradient(std::vector<double>& initialConditions, my_Parser & parser, const Parameters& parameters) {
     // Open the file
     std::ifstream file_fun("function.txt");
     if (!file_fun) {
@@ -323,7 +332,7 @@ void readFunctionAndGradient(std::vector<double>& initialConditions, mup::Parser
 
     std::getline(file_fun, line); // Skip the "//function" line
     std::getline(file_fun, line); // Read the function
-    parser.SetExpr(line);
+    parser.setFunction(line);
 
     // Read the gradient from the file
 
@@ -334,7 +343,7 @@ void readFunctionAndGradient(std::vector<double>& initialConditions, mup::Parser
         for (int i = 0; i < parameters.dim; ++i) 
         {
             std::getline(file_fun, line); // Read a gradient function
-            parserVec[i].SetExpr(line);
+            parser.setGradientFunction(i, line);
         }
     }
     else
