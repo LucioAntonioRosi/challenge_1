@@ -1,21 +1,18 @@
 #include <cmath>    
 #include <iostream> 
-#include <tuple>
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include "my_parser.hpp"
 
 using namespace mup;
 
-// Define global constant
-
-constexpr float mu = 0.2;
-
 // Define the structs
+
 struct Parameters 
 {
     float a0;
     float eta;
+    float mu;
     int dim;
     float sigma;
     float tol_r;
@@ -31,25 +28,29 @@ struct Solution
     int iter;
 };
 
-// Define the enum
+// Define the enums
 
 enum DecayType 
 {
-    Exponential = 0,
-    Inverse = 1,
-    Armijo = 2
+    Exponential,
+    Inverse,
+    Armijo
 };
 
 enum SecondOrderMethod 
 {
-    None = 0,
-    HeavyBall = 1
+    None,
+    HeavyBall,
+    Nesterov
 };
+
 // Choose your decay type
 
 constexpr std::string_view Numerical_grad = "Y";
 constexpr DecayType decay = DecayType::Exponential;
-constexpr SecondOrderMethod method = SecondOrderMethod::None;
+constexpr SecondOrderMethod method = SecondOrderMethod::Nesterov;
+
+// Define the operators
 
 std::vector<double> operator*(double, const std::vector<double>&);
 std::vector<double> operator-(const std::vector<double>&, const std::vector<double>&);
@@ -60,52 +61,36 @@ std::vector<double> operator+(const std::vector<double>&, const std::vector<doub
 template<DecayType decayType, SecondOrderMethod method>
 float handleDecay(const Parameters &, int, my_Parser &, const std::vector<double> &);
 
-double distance(const std::vector<double>&, const std::vector<double>&);
-
-void readFunctionAndGradient(std::vector<double>&, my_Parser &, const Parameters &);
+// Define the function to compute the minimum
 
 template<DecayType decayType, SecondOrderMethod method>
 Solution ComputeMinimum(const Parameters&);
 
+// Other auxiliary functions
+
+double distance(const std::vector<double>&, const std::vector<double>&);
+
+void readFunctionAndGradient(std::vector<double>&, my_Parser &, const Parameters &);
+
+void printSolution(const Solution&);
+
+Parameters readParameters(const std::string&);
+
+// Main function
+
 int main()
 {
-    std::ifstream file("parameters.json");
-
-    // Parse the JSON file
-    
-    nlohmann::json j;
-    file >> j;
-
     // Read the parameters from the JSON file
 
-    Parameters parameters;
-    parameters.a0 = j["a0"];
-    parameters.eta = j["eta"];
-    parameters.dim = j["dim"];
-    parameters.sigma = j["sigma"];
-    parameters.tol_r = j["tol_r"];
-    parameters.tol_s = j["tol_s"];
-    parameters.iter = j["iter"];
+    Parameters parameters(readParameters("parameters.json"));
 
+    // Compute the minimum
+    
     Solution sol(ComputeMinimum<decay,method>(parameters));
 
-    if (sol.converged) 
-    {
-        std::cout << "The minimum is at: (";
-        for (int i = 0; i < parameters.dim; ++i) 
-        {
-            std::cout << sol.minimum_coords[i];
-            if (i != parameters.dim - 1) 
-            {
-                std::cout << ", ";
-            }
-        }
-        std::cout << ")" << std::endl;
-    }
-    else 
-    {
-        std::cout << "The algorithm did not converge" << std::endl;
-    }
+    // Print the solution
+
+    printSolution(sol);
 
     return 0;
 }
@@ -115,17 +100,14 @@ float handleDecay(const Parameters & parameters, int k, my_Parser & parser, cons
 {
     if constexpr (decayType == DecayType::Exponential) 
     {
-        // Handle Exponential decay of parameter alpha
-        return parameters.a0 * std::exp(-mu * k);
+        return parameters.a0 * std::exp(-parameters.mu * k);
 
     } else if constexpr (decayType == DecayType::Inverse) 
     {
-        // Handle Inverse decay
-        return parameters.a0/(1 + mu * k);
+        return parameters.a0/(1 + parameters.mu * k);
 
     } else if constexpr (decayType == DecayType::Armijo && method == SecondOrderMethod::None) 
     {
-        // Handle Armijo decay
         float a = parameters.a0;
         std::vector<double> x0 = parser.getValues();
         double fun_x0_value = parser.evaluateFunction(x0);
@@ -155,8 +137,6 @@ Solution ComputeMinimum(const Parameters& parameters)
     readFunctionAndGradient(x0, parser, parameters);
 
     // Set the values of the variables
-
-    std::cout << "Exited from readFunctionAndGradient" << std::endl;
     
     parser.setValues(x0);
 
@@ -168,19 +148,21 @@ Solution ComputeMinimum(const Parameters& parameters)
     std::vector<double> d0(parameters.dim, 0.0);
     std::vector<double> x1(parameters.dim);
 
-    std::cout << "Created the variables" << std::endl;
-
     if constexpr (method == SecondOrderMethod::HeavyBall)
     {
         if constexpr (Numerical_grad == "Y")
             d0 = (-parameters.a0) * parser.evaluateGradientFunction(x0);
         else if constexpr(Numerical_grad == "N")
         d0 = (-parameters.a0) * parser.evaluateGradientDC(x0);
-        std::cout << "d0: " << d0[0] << " " << d0[1] << std::endl;
     }
+    
 
 
     while (k < parameters.iter) {
+
+        // Step 0: Define an aux variable for Nestorov method
+
+        std::vector<double> aux(parameters.dim, 0.0); //This represents x(k-1) but I can't name it x-1 or xk-1
 
         // Step 1: Set x0 to be the right value and set the gradient of the function at x0
 
@@ -195,6 +177,7 @@ Solution ComputeMinimum(const Parameters& parameters)
             gradientValues_x0 = parser.evaluateGradientFunction(x0);
         else if constexpr(Numerical_grad == "N")
             gradientValues_x0 = parser.evaluateGradientDC(x0);
+
         // Step 2: Handle the decay of the parameter alpha and update the variable x1
 
         if constexpr (method == SecondOrderMethod::None)
@@ -202,6 +185,28 @@ Solution ComputeMinimum(const Parameters& parameters)
             float alpha = handleDecay<decayType,method>(parameters, k, parser, gradientValues_x0);
 
             x1 = x0 - alpha * gradientValues_x0;
+        }
+
+        else if constexpr (method == SecondOrderMethod::Nesterov)
+        {
+            float alpha = handleDecay<decayType,method>(parameters, k, parser, gradientValues_x0);
+            
+            static bool first = true;
+            
+            if(first)
+            {
+                x1 = x0 - alpha * gradientValues_x0;
+                first = false;
+            }
+            else
+            {
+                std::vector<double> y(x0 - parameters.eta * (x0 - aux));
+
+                if constexpr (Numerical_grad == "Y")
+                    x1 = y - alpha * parser.evaluateGradientFunction(y);
+                else if constexpr(Numerical_grad == "N")
+                    x1 = y - alpha * parser.evaluateGradientDC(y); 
+            }
         }
 
         else if constexpr (method == SecondOrderMethod::HeavyBall)
@@ -218,41 +223,75 @@ Solution ComputeMinimum(const Parameters& parameters)
 
         double grad_norm_x0 = std::sqrt(std::inner_product(gradientValues_x0.begin(), gradientValues_x0.end(), gradientValues_x0.begin(), 0.0));
 
-        // Step 4: Check the stopping criteria
+        // Step 4: Update the parameters
+
+        k++;
+
+        // Step 5: Update the values
+
+        parser.setValues(x1);
+
+        // Step 6: Check the stopping criteria
 
         if (distance(x1, x0) < parameters.tol_r || grad_norm_x0 < parameters.tol_s) 
         {
             break;
         }
+        
+        // Step 7: Update the aux variable for Nestorov method
 
-        // Step 5: Update the parameters
-
-        k++;
-
-        // Step 6: Update the values
-
-        parser.setValues(x1);
-
+        if constexpr (method == SecondOrderMethod::Nesterov)
+        {
+            aux = x0;
+        }
     }
     
     Solution solution;
 
-    if (k == parameters.iter) 
-    {
-        std::cout << "The algorithm did not converge" << std::endl;
-    }
-    else
-    {
-        std::cout << "The algorithm converged in " << k << " iterations with value: " << parser.evaluateFunction(x0) << std::endl;
-        
+    if (k < parameters.iter)
+    { 
         solution.converged = true;
+    }
+        solution.iter = k;
+
+        solution.minimum = parser.evaluateFunction();
 
         for (int i = 0; i < parameters.dim; ++i) 
         {
             solution.minimum_coords.push_back(x0[i]);
         }
-    }
+
     return solution;
+}
+
+Parameters readParameters(const std::string& filename)
+{
+    // Open the file
+
+    std::ifstream file(filename);
+    if (!file) {
+        std::cerr << "Unable to open file json";
+        exit(1);
+    }
+
+    // Parse the JSON file
+
+    nlohmann::json j;
+    file >> j;
+
+    // Read the parameters from the JSON file
+
+    Parameters parameters;
+    parameters.a0 = j["a0"];
+    parameters.eta = j["eta"];
+    parameters.mu = j["mu"];
+    parameters.dim = j["dim"];
+    parameters.sigma = j["sigma"];
+    parameters.tol_r = j["tol_r"];
+    parameters.tol_s = j["tol_s"];
+    parameters.iter = j["iter"];
+
+    return parameters;
 }
 
 
@@ -266,8 +305,6 @@ void readFunctionAndGradient(std::vector<double>& initialConditions, my_Parser &
         std::cerr << "Unable to open file function.txt";
         exit(1);   // call system to stop
     }
-
-    std::cout << "Function file opened successfully" << std::endl;
 
     // Read the initial conditions from the file
 
@@ -292,7 +329,7 @@ void readFunctionAndGradient(std::vector<double>& initialConditions, my_Parser &
 
     if (Numerical_grad == "Y") 
     {
-        std::cout << "The gradient has been defined from the function file..."<< std::endl;
+        std::cout << "The gradient has been defined from the function file...\n"<< std::endl;
         std::getline(file_fun, line); // Skip the "//gradient" line
         for (int i = 0; i < parameters.dim; ++i) 
         {
@@ -302,7 +339,7 @@ void readFunctionAndGradient(std::vector<double>& initialConditions, my_Parser &
     }
     else if (Numerical_grad == "N")
     {
-       std::cout << "We will provide a gradient for you..." << std::endl;
+       std::cout << "We will provide a gradient for you...\n" << std::endl;
     }
     else
     {
@@ -349,4 +386,66 @@ std::vector<double> operator+(const std::vector<double>& v1, const std::vector<d
         result[i] = v1[i] + v2[i];
     }
     return result;
+}
+
+void printSolution(const Solution& sol) 
+{
+    // Check if the solution has converged
+    if (sol.converged) 
+    {
+        std::cout << "Solution Converged at iteration: " << sol.iter << "\n";
+        std::cout << "-----------------------------------\n";
+
+        // Print the decay type
+        std::cout << "Decay Type: " << decay << "\n";
+
+        // Print the method used
+        std::cout << "Method Used: " << method << "\n";
+
+        // Print the minimum coordinates
+        std::cout << "The minimum is at: (";
+        for (size_t i = 0; i < sol.minimum_coords.size(); ++i) 
+        {
+            std::cout << sol.minimum_coords[i];
+            if (i != sol.minimum_coords.size() - 1) 
+            {
+                std::cout << ", ";
+            }
+        }
+        std::cout << ")\n";
+
+        // Print the minimum value
+        std::cout << "With corresponding value at: " << sol.minimum << "\n";
+
+        std::cout << "-----------------------------------\n";
+    }
+    else 
+    {
+        std::cout << "The algorithm did not converge.\n";
+
+        // Print the decay type
+        std::cout << "Decay Type: " << decay << "\n";
+
+        // Print the method used
+        std::cout << "Method Used: " << method << "\n";
+
+        // Print the minimum coordinates
+        std::cout << "The minimum found is at: (";
+        for (size_t i = 0; i < sol.minimum_coords.size(); ++i) 
+        {
+            std::cout << sol.minimum_coords[i];
+            if (i != sol.minimum_coords.size() - 1) 
+            {
+                std::cout << ", ";
+            }
+        }
+        std::cout << ")\n";
+
+        // Print the minimum value
+        std::cout << "With corresponding value at: " << sol.minimum << "\n";
+
+        std::cout << "-----------------------------------\n";
+
+
+    }
 }

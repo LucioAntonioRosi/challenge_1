@@ -1,7 +1,7 @@
 //initial condition
-0 0 
+1 1 
 //function
-x0 * x1 + 4 * x0 ^ 4 + x1 ^ 2 + 3 * x0 
+x0*x0 + x1*x1 
 //gradient 
-x1 + 16 * x0 ^ 3 + 3
-x0 + 2 * x1 
+2*x0
+2*x1 

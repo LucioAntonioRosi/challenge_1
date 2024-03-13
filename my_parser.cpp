@@ -36,17 +36,10 @@
     void my_Parser::setValues(const std::vector<double>& args) 
     {
         int n = args.size();
-        // if (n != values.size()) 
-        // {
-        //     throw std::invalid_argument("Wrong number of arguments");
-        // }
-        // else 
-        // {
             for (int i = 0; i < n; ++i) 
             {
                 values[i] = args[i];
             }
-        // }
     }
 
 
@@ -95,18 +88,6 @@
 
     double my_Parser::evaluatePartialDer(const std::vector<double>& args, int index) 
     {
-        //int n = args.size();
-
-        // if (n != values.size()) 
-        // {
-        //     throw std::invalid_argument("Wrong number of arguments");
-        // }
-
-        // if (index < 0 || index >= n) 
-        // {
-        //     throw std::out_of_range("Index out of range");
-        // }
-
         std::vector<double> args_pos(args),args_neg(args);
         args_pos[index] += h;
         args_neg[index] -= h;
@@ -128,21 +109,28 @@
     }
 
     void my_Parser::printParser() 
-    {
+{
     // Print the vector of values
-    std::cout << "Values: ";
+    
+    std::cout << "Current values:\n";
+    std::cout << "-------\n";
     for (const auto& value : values) {
-        std::cout << value.GetFloat() << ' ';
+        std::cout << value.GetFloat() << '\n';
     }
-    std::cout << '\n';
+    std::cout << "-------\n\n";
 
-    // Print the fun expression
-    std::cout << "Function: " << fun.GetExpr() << '\n';
+    // Print the function expression
+   
+     std::cout << "Function Expression:\n";
+    std::cout << "-------------------\n";
+    std::cout << fun.GetExpr() << '\n';
+    std::cout << "-------------------\n\n";
 
     // Print the gradient expressions
-    std::cout << "Gradient: ";
-    for (const auto& parser : grad) {
-        std::cout << parser.GetExpr() << std::endl;
+    std::cout << "Gradient Expressions:\n";
+    std::cout << "---------------------\n";
+    for (size_t i = 0; i < grad.size(); ++i) {
+        std::cout << "Gradient " << (i + 1) << ": " << grad[i].GetExpr() << '\n';
     }
-    std::cout << '\n';
-}
+    std::cout << "---------------------\n\n";
+}   
