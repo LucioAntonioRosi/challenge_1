@@ -25,4 +25,7 @@ make: *** [Makefile:14: main.o] Error 1
 
 #Because /bits is not in /usr/include ... Is this a problem? Ask the professor...
 
-## IMPLEMENT A HEADER FILE FOR THE GRADIENT
+
+## CAN USE THIS FOR ALPHA0
+
+sed -i "s@n_max_it = 100@n_intervals = 200@g" dataGetPot //Need to change it

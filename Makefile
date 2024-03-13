@@ -1,15 +1,15 @@
-CXXFLAGS = -std=c++20
-CPPFLAGS = -I ./include -I/usr/include -I/usr/include/x86_64-linux-gnu/ # I do not know why but the directory bits is in the last one
-LDFLAGS = -L. -Wl,-rpath=${PWD}
-LIBS = -lmuparserx
+CXX      ?= g++
+CXXFLAGS ?= -std=c++20
+PACS_ROOT = ../../pacs-examples
+EXEC = main
+CPPFLAGS?= -O3 -I. -Wall -Wno-conversion-null -Wno-deprecated-declarations -I${PACS_ROOT}/Examples/include -I${PACS_ROOT}/Examples/include/muparserx
+LDFLAGS ?= -L${PACS_ROOT}/Examples/lib
+LIBS ?= -lmuparserx
+OBJS := $(patsubst %.cpp,%.o,$(wildcard *.cpp))
 
-.phony= all clean distclean
+all: $(EXEC)
 
-.DEFAULT_GOAL = all
-
-all: main
-
-main: main.o my_parser.o
+main: $(OBJS)
 	$(CXX) $(LDFLAGS) $^ -o $@ $(LIBS)
 
 %.o: %.cpp
@@ -19,4 +19,4 @@ clean:
 	$(RM) *.o
 
 distclean: clean
-	$(RM) main
+	$(RM) *~

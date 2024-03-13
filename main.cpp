@@ -7,18 +7,16 @@
 
 using namespace mup;
 
-// Define global constants
+// Define global constant
 
 constexpr float mu = 0.2;
-constexpr float eta = 0.9;
 
 // Define the structs
 struct Parameters 
 {
     float a0;
+    float eta;
     int dim;
-    std::vector<std::string> types;
-    std::string gradient;
     float sigma;
     float tol_r;
     float tol_s;
@@ -37,30 +35,36 @@ struct Solution
 
 enum DecayType 
 {
-    Exponential,
-    Inverse,
-    Armijo,
-    HeavyBall
+    Exponential = 0,
+    Inverse = 1,
+    Armijo = 2
 };
 
+enum SecondOrderMethod 
+{
+    None = 0,
+    HeavyBall = 1
+};
 // Choose your decay type
 
-constexpr DecayType decay = DecayType::HeavyBall;
+constexpr std::string_view Numerical_grad = "Y";
+constexpr DecayType decay = DecayType::Exponential;
+constexpr SecondOrderMethod method = SecondOrderMethod::None;
 
-std::vector<double> operator*(double, const std::vector<double>& );
+std::vector<double> operator*(double, const std::vector<double>&);
 std::vector<double> operator-(const std::vector<double>&, const std::vector<double>&);
 std::vector<double> operator+(const std::vector<double>&, const std::vector<double>&);
 
 // Define the function to handle the decay
 
-template<DecayType decayType>
+template<DecayType decayType, SecondOrderMethod method>
 float handleDecay(const Parameters &, int, my_Parser &, const std::vector<double> &);
 
 double distance(const std::vector<double>&, const std::vector<double>&);
 
 void readFunctionAndGradient(std::vector<double>&, my_Parser &, const Parameters &);
 
-template<DecayType decayType>
+template<DecayType decayType, SecondOrderMethod method>
 Solution ComputeMinimum(const Parameters&);
 
 int main()
@@ -76,14 +80,14 @@ int main()
 
     Parameters parameters;
     parameters.a0 = j["a0"];
+    parameters.eta = j["eta"];
     parameters.dim = j["dim"];
-    parameters.gradient = j["gradient"];
     parameters.sigma = j["sigma"];
     parameters.tol_r = j["tol_r"];
     parameters.tol_s = j["tol_s"];
     parameters.iter = j["iter"];
 
-    Solution sol(ComputeMinimum<decay>(parameters));
+    Solution sol(ComputeMinimum<decay,method>(parameters));
 
     if (sol.converged) 
     {
@@ -106,11 +110,10 @@ int main()
     return 0;
 }
 
-template<DecayType decayType>
+template<DecayType decayType, SecondOrderMethod method>
 float handleDecay(const Parameters & parameters, int k, my_Parser & parser, const std::vector<double> & grad_evals)
 {
-    float alpha;
-    if constexpr (decayType == DecayType::Exponential || decayType == DecayType::HeavyBall) 
+    if constexpr (decayType == DecayType::Exponential) 
     {
         // Handle Exponential decay of parameter alpha
         return parameters.a0 * std::exp(-mu * k);
@@ -120,7 +123,7 @@ float handleDecay(const Parameters & parameters, int k, my_Parser & parser, cons
         // Handle Inverse decay
         return parameters.a0/(1 + mu * k);
 
-    } else if constexpr (decayType == DecayType::Armijo) 
+    } else if constexpr (decayType == DecayType::Armijo && method == SecondOrderMethod::None) 
     {
         // Handle Armijo decay
         float a = parameters.a0;
@@ -137,12 +140,12 @@ float handleDecay(const Parameters & parameters, int k, my_Parser & parser, cons
     }
     else 
     {
-        std::cout << "Invalid decay type" << std::endl;
+        std::cout << "Wrong combination of decay type and second order method" << std::endl;
         exit(1);
     }
 }
 
-template<DecayType decayType>
+template<DecayType decayType, SecondOrderMethod method>
 Solution ComputeMinimum(const Parameters& parameters)
 {
     my_Parser parser(parameters.dim);
@@ -152,24 +155,32 @@ Solution ComputeMinimum(const Parameters& parameters)
     readFunctionAndGradient(x0, parser, parameters);
 
     // Set the values of the variables
+
+    std::cout << "Exited from readFunctionAndGradient" << std::endl;
     
     parser.setValues(x0);
 
-    //parser.printParser();
+    parser.printParser();
 
     // Define the parameters of the algorithm
     
     int k = 0;
     std::vector<double> d0(parameters.dim, 0.0);
+    std::vector<double> x1(parameters.dim);
 
-    if constexpr (decayType == DecayType::HeavyBall)
+    std::cout << "Created the variables" << std::endl;
+
+    if constexpr (method == SecondOrderMethod::HeavyBall)
     {
-        d0 = (-parameters.a0) * parser.evaluateGradientFunction(x0);
+        if constexpr (Numerical_grad == "Y")
+            d0 = (-parameters.a0) * parser.evaluateGradientFunction(x0);
+        else if constexpr(Numerical_grad == "N")
+        d0 = (-parameters.a0) * parser.evaluateGradientDC(x0);
         std::cout << "d0: " << d0[0] << " " << d0[1] << std::endl;
     }
-    while(k < parameters.iter){
 
-        std::vector<double> x1(parameters.dim);
+
+    while (k < parameters.iter) {
 
         // Step 1: Set x0 to be the right value and set the gradient of the function at x0
 
@@ -178,25 +189,32 @@ Solution ComputeMinimum(const Parameters& parameters)
                 x0[i] = parser.getValues()[i]; 
             }
 
-        std::vector<double> gradientValues_x0(parser.evaluateGradientFunction(x0));
+        std::vector<double> gradientValues_x0(parameters.dim);
 
-        // Step 2: Handle the decay of the parameter alpha
+        if constexpr (Numerical_grad == "Y")
+            gradientValues_x0 = parser.evaluateGradientFunction(x0);
+        else if constexpr(Numerical_grad == "N")
+            gradientValues_x0 = parser.evaluateGradientDC(x0);
+        // Step 2: Handle the decay of the parameter alpha and update the variable x1
 
-        float alpha = handleDecay<decayType>(parameters, k, parser, gradientValues_x0);
-
-        // Step 3: Update the variable x1
-
-        if constexpr (decayType == DecayType::Exponential || decayType == DecayType::Inverse || decayType == DecayType::Armijo)
+        if constexpr (method == SecondOrderMethod::None)
         {
+            float alpha = handleDecay<decayType,method>(parameters, k, parser, gradientValues_x0);
+
             x1 = x0 - alpha * gradientValues_x0;
         }
-        else 
+
+        else if constexpr (method == SecondOrderMethod::HeavyBall)
         {
             x1 = x0 + d0;
-            d0 = eta * d0 - alpha * parser.evaluateGradientFunction(x1);
+            float alphak1 = handleDecay<decayType,method>(parameters, k + 1, parser, gradientValues_x0);
+            if constexpr (Numerical_grad == "Y")
+                d0 = parameters.eta * d0 - alphak1 * parser.evaluateGradientFunction(x1);
+            else if constexpr(Numerical_grad == "N")
+                d0 = parameters.eta * d0 - alphak1 * parser.evaluateGradientDC(x1);
         }
 
-        // Define the norm of the gradient
+        // Step 3: Compute the norm of the gradient at x0
 
         double grad_norm_x0 = std::sqrt(std::inner_product(gradientValues_x0.begin(), gradientValues_x0.end(), gradientValues_x0.begin(), 0.0));
 
@@ -206,13 +224,6 @@ Solution ComputeMinimum(const Parameters& parameters)
         {
             break;
         }
-
-        //parser.printParser();
-
-        // Print the iteration information
-
-        //std::cout << "Iteration: " << k << "  ";
-        //std::cout << "Distance: " << distance(x1, x0) << " Gradient norm: " << grad_norm_x0 << " Difference: " << 10 * distance(x1, x0) - grad_norm_x0 << std::endl;
 
         // Step 5: Update the parameters
 
@@ -279,9 +290,9 @@ void readFunctionAndGradient(std::vector<double>& initialConditions, my_Parser &
 
     // Read the gradient from the file
 
-    if (parameters.gradient == "y") 
+    if (Numerical_grad == "Y") 
     {
-        std::cout << "You want to define the gradient by yourself: "<< std::endl;
+        std::cout << "The gradient has been defined from the function file..."<< std::endl;
         std::getline(file_fun, line); // Skip the "//gradient" line
         for (int i = 0; i < parameters.dim; ++i) 
         {
@@ -289,9 +300,14 @@ void readFunctionAndGradient(std::vector<double>& initialConditions, my_Parser &
             parser.setGradientFunction(i, line);
         }
     }
-    else
+    else if (Numerical_grad == "N")
     {
        std::cout << "We will provide a gradient for you..." << std::endl;
+    }
+    else
+    {
+        std::cout << "Wrong string used for Numerical_grad. " << std::endl;
+        exit(1);
     }
 
     // Close the file

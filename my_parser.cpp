@@ -1,4 +1,4 @@
-#include "include/my_parser.hpp"
+#include "my_parser.hpp"
 
     my_Parser::my_Parser(int n) : fun(mup::pckALL_NON_COMPLEX), grad(n, mup::ParserX(mup::pckALL_NON_COMPLEX)),values(n, mup::Value(0.0))
     {
@@ -25,7 +25,8 @@
 
     void my_Parser::setGradientFunction(int index, const std::string& expression)
      {
-        if (index >= 0 && index < grad.size()) {
+        int n = grad.size();
+        if (index >= 0 && index < n) {
             grad[index].SetExpr(expression);
         } else {
             throw std::out_of_range("Index out of range");
@@ -34,9 +35,18 @@
 
     void my_Parser::setValues(const std::vector<double>& args) 
     {
-        for (int i = 0; i < args.size(); ++i) {
-            values[i] = args[i];
-        }
+        int n = args.size();
+        // if (n != values.size()) 
+        // {
+        //     throw std::invalid_argument("Wrong number of arguments");
+        // }
+        // else 
+        // {
+            for (int i = 0; i < n; ++i) 
+            {
+                values[i] = args[i];
+            }
+        // }
     }
 
 
@@ -63,24 +73,8 @@
     double my_Parser::evaluateFunction(const std::vector<double>& args) 
     {
         setValues(args);
-        return fun.Eval().GetFloat();
+        return evaluateFunction();
     }
-
-
-
-    std::vector<double> my_Parser::evaluateGradientFunction(const std::vector<double>& args) 
-    {
-        setValues(args);
-        std::vector<double> result;
-        result.reserve(grad.size());
-        for (const auto& parser : grad) 
-        {
-            result.push_back(parser.Eval().GetFloat());
-        }
-        return result;
-    }
-    
-
 
     std::vector<double> my_Parser::evaluateGradientFunction() 
     {
@@ -93,7 +87,48 @@
         return result;
     }
 
-    void my_Parser::printParser() {
+     std::vector<double> my_Parser::evaluateGradientFunction(const std::vector<double>& args) 
+    {
+        setValues(args);
+        return evaluateGradientFunction();
+    }
+
+    double my_Parser::evaluatePartialDer(const std::vector<double>& args, int index) 
+    {
+        //int n = args.size();
+
+        // if (n != values.size()) 
+        // {
+        //     throw std::invalid_argument("Wrong number of arguments");
+        // }
+
+        // if (index < 0 || index >= n) 
+        // {
+        //     throw std::out_of_range("Index out of range");
+        // }
+
+        std::vector<double> args_pos(args),args_neg(args);
+        args_pos[index] += h;
+        args_neg[index] -= h;
+        double result(1/(2*h)*(evaluateFunction(args_pos) - evaluateFunction(args_neg)));
+        setValues(args);
+        return result; 
+    }
+    
+    std::vector<double> my_Parser::evaluateGradientDC(const std::vector<double>& args) 
+    {
+        std::vector<double> result;
+        result.reserve(grad.size());
+        int n = args.size();
+        for (int i = 0; i < n; ++i) 
+        {
+            result.push_back(evaluatePartialDer(args, i));
+        }
+        return result;
+    }
+
+    void my_Parser::printParser() 
+    {
     // Print the vector of values
     std::cout << "Values: ";
     for (const auto& value : values) {

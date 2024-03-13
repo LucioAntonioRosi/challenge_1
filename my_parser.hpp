@@ -13,6 +13,7 @@
 class my_Parser 
 {
 private:
+    const float h = 1e-6;
     mup::ParserX fun;
     std::vector<mup::ParserX> grad;
     std::vector<mup::Value> values;
@@ -27,6 +28,8 @@ public:
     std::vector<double> getValues();
     double evaluateFunction();
     double evaluateFunction(const std::vector<double>& args); 
+    double evaluatePartialDer(const std::vector<double>& args, int index);
+    std::vector<double> evaluateGradientDC(const std::vector<double>& args);
     std::vector<double> evaluateGradientFunction(const std::vector<double>& args);
     std::vector<double> evaluateGradientFunction();
     void printParser(); 
