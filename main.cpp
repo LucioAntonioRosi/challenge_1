@@ -273,62 +273,92 @@ Parameters readParameters(const std::string& filename)
     return parameters;
 }
 
+void readFunctionAndGradient(std::vector<double>& initial_values, my_Parser& parser, const Parameters& parameters) {
+    // Open the JSON file
+    std::ifstream file("parameters.json");
+    if (!file) 
+    {
+        throw std::runtime_error("Could not open file parameters.json");
+    }
 
-void readFunctionAndGradient(std::vector<double>& initialConditions, my_Parser & parser, const Parameters& parameters) 
+    // Parse the JSON file
+    nlohmann::json j;
+    file >> j;
+
+    // Read the function and gradient from the JSON file
+    std::string function = j["function"];
+    std::vector<std::string> gradient = j["gradient"];
+    initial_values = j["initial_values"].get<std::vector<double>>();;
+
+    // Check that the sizes match
+    if (static_cast<size_t>(parameters.dim) != initial_values.size() || static_cast<size_t>(parameters.dim) != gradient.size()) 
 {
-    // Open the file
-
-    std::ifstream file_fun("function.txt");
-    
-    if (!file_fun) {
-        std::cerr << "Unable to open file function.txt";
-        exit(1);   // call system to stop
-    }
-
-    // Read the initial conditions from the file
-
-    std::string line;
-    double value;
-    std::getline(file_fun, line); // Skip the "//initial conditions" line
-    std::getline(file_fun, line); // Read the initial conditions
-    std::istringstream iss(line);
-
-    while (iss >> value) 
-    {
-        initialConditions.push_back(value);
-    }
-
-    // Read the function from the file
-
-    std::getline(file_fun, line); // Skip the "//function" line
-    std::getline(file_fun, line); // Read the function
-    parser.setFunction(line);
-
-    // Read the gradient from the file
-
-    if (Numerical_grad == "Y") 
-    {
-        std::cout << "The gradient has been defined from the function file...\n"<< std::endl;
-        std::getline(file_fun, line); // Skip the "//gradient" line
-        for (int i = 0; i < parameters.dim; ++i) 
-        {
-            std::getline(file_fun, line); // Read a gradient function
-            parser.setGradientFunction(i, line);
-        }
-    }
-    else if (Numerical_grad == "N")
-    {
-       std::cout << "We will provide a gradient for you...\n" << std::endl;
-    }
-    else
-    {
-        std::cout << "Wrong string used for Numerical_grad. " << std::endl;
-        exit(1);
-    }
-
-    // Close the file
-    file_fun.close();
+    throw std::runtime_error("Mismatch between problem dimension and size of initial values or gradient");
 }
+
+    // Set the function and gradient
+    parser.setFunction(function);
+    for (int i = 0; i < parameters.dim; ++i) 
+    {
+        parser.setGradientFunction(i, gradient[i]);
+    }
+}
+
+// void readFunctionAndGradient(std::vector<double>& initialConditions, my_Parser & parser, const Parameters& parameters) 
+// {
+//     // Open the file
+
+//     std::ifstream file_fun("function.txt");
+    
+//     if (!file_fun) {
+//         std::cerr << "Unable to open file function.txt";
+//         exit(1);   // call system to stop
+//     }
+
+//     // Read the initial conditions from the file
+
+//     std::string line;
+//     double value;
+//     std::getline(file_fun, line); // Skip the "//initial conditions" line
+//     std::getline(file_fun, line); // Read the initial conditions
+//     std::istringstream iss(line);
+
+//     while (iss >> value) 
+//     {
+//         initialConditions.push_back(value);
+//     }
+
+//     // Read the function from the file
+
+//     std::getline(file_fun, line); // Skip the "//function" line
+//     std::getline(file_fun, line); // Read the function
+//     parser.setFunction(line);
+
+//     // Read the gradient from the file
+
+//     if (Numerical_grad == "Y") 
+//     {
+//         std::cout << "The gradient has been defined from the function file...\n"<< std::endl;
+//         std::getline(file_fun, line); // Skip the "//gradient" line
+//         for (int i = 0; i < parameters.dim; ++i) 
+//         {
+//             std::getline(file_fun, line); // Read a gradient function
+//             parser.setGradientFunction(i, line);
+//         }
+//     }
+//     else if (Numerical_grad == "N")
+//     {
+//        std::cout << "We will provide a gradient for you...\n" << std::endl;
+//     }
+//     else
+//     {
+//         std::cout << "Wrong string used for Numerical_grad. " << std::endl;
+//         exit(1);
+//     }
+
+//     // Close the file
+//     file_fun.close();
+// }
 
 double distance(const std::vector<double>& x1, const std::vector<double>& x0) 
 {

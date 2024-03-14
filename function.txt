@@ -1,7 +1,0 @@
-//initial condition
-1 1 
-//function
-x0*x0 + x1*x1 
-//gradient 
-2*x0
-2*x1 
