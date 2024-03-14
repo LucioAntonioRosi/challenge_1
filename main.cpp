@@ -3,6 +3,7 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include "my_parser.hpp"
+#include "methods.hpp"
 
 using namespace mup;
 
@@ -27,28 +28,6 @@ struct Solution
     double minimum;
     int iter;
 };
-
-// Define the enums
-
-enum DecayType 
-{
-    Exponential,
-    Inverse,
-    Armijo
-};
-
-enum SecondOrderMethod 
-{
-    None,
-    HeavyBall,
-    Nesterov
-};
-
-// Choose your decay type
-
-constexpr std::string_view Numerical_grad = "Y";
-constexpr DecayType decay = DecayType::Exponential;
-constexpr SecondOrderMethod method = SecondOrderMethod::Nesterov;
 
 // Define the operators
 
