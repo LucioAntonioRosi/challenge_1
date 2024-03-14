@@ -38,12 +38,12 @@ std::vector<double> operator+(const std::vector<double>&, const std::vector<doub
 // Define the function to handle the decay
 
 template<DecayType decayType, SecondOrderMethod method>
-float handleDecay(const Parameters &, int, my_Parser &, const std::vector<double> &);
+float handleDecay (const Parameters &, int, my_Parser &, const std::vector<double> &);
 
 // Define the function to compute the minimum
 
 template<DecayType decayType, SecondOrderMethod method>
-Solution ComputeMinimum(const Parameters&);
+Solution ComputeMinimum (const Parameters&);
 
 // Other auxiliary functions
 
@@ -107,7 +107,7 @@ float handleDecay(const Parameters & parameters, int k, my_Parser & parser, cons
 }
 
 template<DecayType decayType, SecondOrderMethod method>
-Solution ComputeMinimum(const Parameters& parameters)
+Solution ComputeMinimum (const Parameters& parameters)
 {
     my_Parser parser(parameters.dim);
 
@@ -367,7 +367,7 @@ std::vector<double> operator+(const std::vector<double>& v1, const std::vector<d
     return result;
 }
 
-void printSolution(const Solution& sol) 
+void printSolution(const Solution& sol)
 {
     // Check if the solution has converged
     if (sol.converged) 

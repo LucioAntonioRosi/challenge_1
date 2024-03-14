@@ -25,14 +25,14 @@ public:
     void setFunction(const std::string& expression);
     void setGradientFunction(int index, const std::string& expression);
     void setValues(const std::vector<double>& args);
-    std::vector<double> getValues();
-    double evaluateFunction();
+    std::vector<double> getValues() const;
+    double evaluateFunction() const;
     double evaluateFunction(const std::vector<double>& args); 
     double evaluatePartialDer(const std::vector<double>& args, int index);
     std::vector<double> evaluateGradientDC(const std::vector<double>& args);
     std::vector<double> evaluateGradientFunction(const std::vector<double>& args);
-    std::vector<double> evaluateGradientFunction();
-    void printParser(); 
+    std::vector<double> evaluateGradientFunction() const;
+    void printParser() const; 
 };
 
 
