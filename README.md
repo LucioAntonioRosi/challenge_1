@@ -7,9 +7,17 @@
 ## How to **MAKE**
 
 First, go in the **Makefile** and change **PACS_ROOT** to the working directory where the examples reside.
-Then, if you have already installed the Extras, simply type 
+Then, if you have already installed the Extras, copy the following line to **make** and **run** the executable.
 ``` bash
-    make
+    make; ./main
+```
+If you only want to change the parameters in **parameters.json** you can simply change them and run again
+``` bash
+    ./main
+```
+On the other hand, if you want to change the Methods used (you can change between [Exponential,Inverse,Armijo] for the decay rate, [None,HeavyBall,Nesterov,Adam] for the "Second order Methods" and between ["Y","N"] if you do not want to define your gradient by yourself) you first go to **methods.hpp** in the **include** directory, make the changes and then type in your command line
+``` bash
+    make distclean; make; ./main
 ```
 
 ### Parameters
