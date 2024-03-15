@@ -32,8 +32,30 @@ struct Solution
 // Define the operators
 
 std::vector<double> operator*(double, const std::vector<double>&);
-std::vector<double> operator-(const std::vector<double>&, const std::vector<double>&);
-std::vector<double> operator+(const std::vector<double>&, const std::vector<double>&);
+
+
+// std::function<std::vector<double>(const std::vector<double>&, const std::vector<double>&)> subtract = 
+//     [](const std::vector<double>& vec1, const std::vector<double>& vec2) {
+//         std::vector<double> result(vec1.size());
+//         std::transform(vec1.begin(), vec1.end(), vec2.begin(), result.begin(), std::minus<double>());
+//         return result;
+//     };
+
+// std::function<std::vector<double>(const std::vector<double>&, const std::vector<double>&)> add = 
+//     [](const std::vector<double>& vec1, const std::vector<double>& vec2) {
+//         std::vector<double> result(vec1.size());
+//         std::transform(vec1.begin(), vec1.end(), vec2.begin(), result.begin(), std::plus<double>());
+//         return result;
+//     };
+
+// std::vector<std::function<std::vector<double>(const std::vector<double>&, const std::vector<double>&)>> operation;
+
+// operation.push_back(add);
+// operation.push_back(subtract);
+
+
+ std::vector<double> operator-(const std::vector<double>&, const std::vector<double>&);
+ std::vector<double> operator+(const std::vector<double>&, const std::vector<double>&);
 
 // Define the function to handle the decay
 
@@ -400,3 +422,19 @@ void printSolution(const Solution& sol)
 
     }
 }
+
+// std::function<std::vector<double>(const std::vector<double>&, const std::vector<double>&)> subtract = 
+//     [](const std::vector<double>& vec1, const std::vector<double>& vec2) 
+//     {
+//         std::vector<double> result(vec1.size());
+//         std::transform(vec1.begin(), vec1.end(), vec2.begin(), result.begin(), std::minus<double>());
+//         return result;
+//     };
+
+// std::function<std::vector<double>(const std::vector<double>&, const std::vector<double>&)> add = 
+//     [](const std::vector<double>& vec1, const std::vector<double>& vec2) 
+//     {
+//         std::vector<double> result(vec1.size());
+//         std::transform(vec1.begin(), vec1.end(), vec2.begin(), result.begin(), std::plus<double>());
+//         return result;
+//     };
