@@ -8,19 +8,25 @@
 
 First, go in the **Makefile** and change **PACS_ROOT** to the working directory where the examples reside.
 Then, if you have already installed the Extras, copy the following line to **make** and **run** the executable.
-``` bash
-    make; ./main
-```
+> ``` bash
+>     make; ./main
+> ```
 If you only want to change the parameters in **parameters.json** you can simply change them and run again
-``` bash
-    ./main
-```
+> ``` bash
+>     ./main
+> ```
 On the other hand, if you want to change the Methods used (you can change between [Exponential,Inverse,Armijo] for the decay rate, [None,HeavyBall,Nesterov,Adam] for the "Second order Methods" and between ["Y","N"] if you do not want to define your gradient by yourself) you first go to **methods.hpp** in the **include** directory, make the changes and then type in your command line
->> ``` bash
->>     make distclean; make; ./main
->> ```
+> ``` bash
+>     make distclean; make; ./main
+> ```
 
-### Parameters
+## Warnings!!
+
+- Do not use the **Armijo** rule with any second order methods, as they may not work well together for theoretical reasons!
+- When you set the parameters, be careful to define the right number of **dim** (You must be coherent)!
+
+ 
+## Parameters
 
 > Here is a brief explanation of the parameters used:
 > - **alpha0** : initial learning rate used for all the decay rates (default value = 0.1) 
@@ -35,7 +41,3 @@ On the other hand, if you want to change the Methods used (you can change betwee
 > - **function** : a string that defines your function (e.g. "x0 * x1 + sin(exp(x0))" or "x0 * x1 + 4 * x0 ^ 4 + x1 ^ 2 + 3*x0")
 > - **gradient** : an array of strings that defines your gradient (e.g. ["x1 + 16 * x0 ^ 3 + 3", "x0 + 2 * x1"])
 > - **initial_values** : an array of the starting point (e.g. [0.0, 0.0]) 
-
-## CAN USE THIS FOR ALPHA0
-
-sed -i "s@n_max_it = 100@n_intervals = 200@g" dataGetPot //Need to change it
