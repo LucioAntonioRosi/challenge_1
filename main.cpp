@@ -124,33 +124,30 @@ Solution ComputeMinimum (const Parameters& parameters)
     // Define the parameters of the algorithm
     
     int k = 0;
-    std::vector<double> d0(parameters.dim, 0.0);
+    std::vector<double> d0(parameters.dim);
     std::vector<double> x1(parameters.dim);
+    std::vector<double> aux(parameters.dim); //This represents x(k-1) but I can't name it x-1 or xk-1
+    std::vector<double> gradientValues_x0(parameters.dim);
 
     if constexpr (method == SecondOrderMethod::HeavyBall)
     {
         if constexpr (Numerical_grad == "Y")
-            d0 = (-parameters.a0) * parser.evaluateGradientFunction(x0);
+            d0 = -parameters.a0 * parser.evaluateGradientFunction(x0);
         else if constexpr(Numerical_grad == "N")
-        d0 = (-parameters.a0) * parser.evaluateGradientDC(x0);
+        d0 = -parameters.a0 * parser.evaluateGradientDC(x0);
     }
     
 
 
     while (k < parameters.iter) {
 
-        // Step 0: Define an aux variable for Nestorov method
-
-        std::vector<double> aux(parameters.dim, 0.0); //This represents x(k-1) but I can't name it x-1 or xk-1
-
         // Step 1: Set x0 to be the right value and set the gradient of the function at x0
 
-        for (int i = 0; i < parameters.dim; ++i) 
-            {
-                x0[i] = parser.getValues()[i]; 
-            }
-
-        std::vector<double> gradientValues_x0(parameters.dim);
+        // for (int i = 0; i < parameters.dim; ++i) 
+        //     {
+        //         x0[i] = parser.getValues()[i]; 
+        //     }
+        x0 = parser.getValues();
 
         if constexpr (Numerical_grad == "Y")
             gradientValues_x0 = parser.evaluateGradientFunction(x0);
@@ -179,7 +176,7 @@ Solution ComputeMinimum (const Parameters& parameters)
             }
             else
             {
-                std::vector<double> y(x0 - parameters.eta * (x0 - aux));
+                std::vector<double> y(x0 - parameters.eta*(x0 - aux));
 
                 if constexpr (Numerical_grad == "Y")
                     x1 = y - alpha * parser.evaluateGradientFunction(y);
@@ -195,7 +192,7 @@ Solution ComputeMinimum (const Parameters& parameters)
             if constexpr (Numerical_grad == "Y")
                 d0 = parameters.eta * d0 - alphak1 * parser.evaluateGradientFunction(x1);
             else if constexpr(Numerical_grad == "N")
-                d0 = parameters.eta * d0 - alphak1 * parser.evaluateGradientDC(x1);
+                d0 = parameters.eta * d0  - alphak1 * parser.evaluateGradientDC(x1);
         }
 
         // Step 3: Compute the norm of the gradient at x0
@@ -273,7 +270,8 @@ Parameters readParameters(const std::string& filename)
     return parameters;
 }
 
-void readFunctionAndGradient(std::vector<double>& initial_values, my_Parser& parser, const Parameters& parameters) {
+void readFunctionAndGradient(std::vector<double>& initial_values, my_Parser& parser, const Parameters& parameters) 
+{
     // Open the JSON file
     std::ifstream file("parameters.json");
     if (!file) 
@@ -292,9 +290,9 @@ void readFunctionAndGradient(std::vector<double>& initial_values, my_Parser& par
 
     // Check that the sizes match
     if (static_cast<size_t>(parameters.dim) != initial_values.size() || static_cast<size_t>(parameters.dim) != gradient.size()) 
-{
+    {
     throw std::runtime_error("Mismatch between problem dimension and size of initial values or gradient");
-}
+    }
 
     // Set the function and gradient
     parser.setFunction(function);
@@ -303,62 +301,6 @@ void readFunctionAndGradient(std::vector<double>& initial_values, my_Parser& par
         parser.setGradientFunction(i, gradient[i]);
     }
 }
-
-// void readFunctionAndGradient(std::vector<double>& initialConditions, my_Parser & parser, const Parameters& parameters) 
-// {
-//     // Open the file
-
-//     std::ifstream file_fun("function.txt");
-    
-//     if (!file_fun) {
-//         std::cerr << "Unable to open file function.txt";
-//         exit(1);   // call system to stop
-//     }
-
-//     // Read the initial conditions from the file
-
-//     std::string line;
-//     double value;
-//     std::getline(file_fun, line); // Skip the "//initial conditions" line
-//     std::getline(file_fun, line); // Read the initial conditions
-//     std::istringstream iss(line);
-
-//     while (iss >> value) 
-//     {
-//         initialConditions.push_back(value);
-//     }
-
-//     // Read the function from the file
-
-//     std::getline(file_fun, line); // Skip the "//function" line
-//     std::getline(file_fun, line); // Read the function
-//     parser.setFunction(line);
-
-//     // Read the gradient from the file
-
-//     if (Numerical_grad == "Y") 
-//     {
-//         std::cout << "The gradient has been defined from the function file...\n"<< std::endl;
-//         std::getline(file_fun, line); // Skip the "//gradient" line
-//         for (int i = 0; i < parameters.dim; ++i) 
-//         {
-//             std::getline(file_fun, line); // Read a gradient function
-//             parser.setGradientFunction(i, line);
-//         }
-//     }
-//     else if (Numerical_grad == "N")
-//     {
-//        std::cout << "We will provide a gradient for you...\n" << std::endl;
-//     }
-//     else
-//     {
-//         std::cout << "Wrong string used for Numerical_grad. " << std::endl;
-//         exit(1);
-//     }
-
-//     // Close the file
-//     file_fun.close();
-// }
 
 double distance(const std::vector<double>& x1, const std::vector<double>& x0) 
 {
@@ -370,14 +312,14 @@ double distance(const std::vector<double>& x1, const std::vector<double>& x0)
     return std::sqrt(sum);
 }
 
-std::vector<double> operator*(double a, const std::vector<double>& v) 
-{
-    std::vector<double> result(v.size());
-    for (std::size_t i = 0; i < v.size(); ++i) {
-        result[i] = v[i] * a;
-    }
-    return result;
-}
+ std::vector<double> operator*(double a, const std::vector<double>& v) 
+ {
+     std::vector<double> result(v.size());
+     for (std::size_t i = 0; i < v.size(); ++i) {
+         result[i] = v[i] * a;
+     }
+     return result;
+ }
 
 std::vector<double> operator-(const std::vector<double>& v1, const std::vector<double>& v2) 
 {

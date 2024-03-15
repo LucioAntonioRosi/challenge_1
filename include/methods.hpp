@@ -21,7 +21,7 @@ enum SecondOrderMethod
 // Choose your decay type
 
 constexpr std::string_view Numerical_grad = "Y";
-constexpr DecayType decay = DecayType::Exponential;
-constexpr SecondOrderMethod method = SecondOrderMethod::None;
+constexpr DecayType decay = DecayType::Inverse;
+constexpr SecondOrderMethod method = SecondOrderMethod::Nesterov;
 
 #endif // HH_METHODS_HH
