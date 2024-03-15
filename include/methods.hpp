@@ -1,4 +1,3 @@
-
 #ifndef HH_METHODS_HH
 #define HH_METHODS_HH
 
@@ -6,29 +5,51 @@
 
 enum DecayType 
 {
-    Exponential,    // 0
-    Inverse,        // 1
-    Armijo          // 2
+    Exponential,    
+    Inverse,        
+    Armijo          
 };
 
 enum SecondOrderMethod 
 {
-    None,           // 0 
-    HeavyBall,      // 1
-    Nesterov,       // 2
-    Adam            // 3
+    None,            
+    HeavyBall,      
+    Nesterov,       
+    Adam            
 };
 
-// Choose your decay type
+
+
+
+
+//################################################################################
+//#                                                                              #                      
+//#             BELOW HERE ARE THE VARIABLES THAT YOU CAN CHANGE!!               #
+//#                                                                              #
+//################################################################################
+
+
 
 constexpr std::string_view DefineGrad = "N";
 constexpr DecayType decay = DecayType::Exponential;
 constexpr SecondOrderMethod method = SecondOrderMethod::Adam;
 
 
+
+//################################################################################
+//#                                                                              #  
+//#             ABOVE HERE ARE THE VARIABLES THAT YOU CAN CHANGE!!               #
+//#                                                                              #
+//################################################################################
+
+
+
+
+
+
 // Define auxiliary functions for the print of the solutions
 
-std::string decayToString(DecayType decay) 
+std::string decayToString(const DecayType decay) const
 {
     switch (decay) {
         case DecayType::Exponential: return "Exponential";
@@ -38,7 +59,7 @@ std::string decayToString(DecayType decay)
     }
 }
 
-std::string methodToString(SecondOrderMethod method) 
+std::string methodToString(const SecondOrderMethod method) const
 {
     switch (method) {
         case SecondOrderMethod::None: return "None";

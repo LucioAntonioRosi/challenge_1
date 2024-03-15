@@ -122,7 +122,7 @@ Solution ComputeMinimum (const Parameters& parameters)
     
     parser.setValues(x0);
 
-    // Define the parameters of the algorithm
+    // Define the different variables for the algorithm
     
     int k = 0;
     std::vector<double> d0(parameters.dim);
