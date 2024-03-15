@@ -16,9 +16,9 @@ If you only want to change the parameters in **parameters.json** you can simply 
     ./main
 ```
 On the other hand, if you want to change the Methods used (you can change between [Exponential,Inverse,Armijo] for the decay rate, [None,HeavyBall,Nesterov,Adam] for the "Second order Methods" and between ["Y","N"] if you do not want to define your gradient by yourself) you first go to **methods.hpp** in the **include** directory, make the changes and then type in your command line
-``` bash
-    make distclean; make; ./main
-```
+>> ``` bash
+>>     make distclean; make; ./main
+>> ```
 
 ### Parameters
 
