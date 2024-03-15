@@ -141,21 +141,19 @@ Solution ComputeMinimum (const Parameters& parameters)
     
     parser.setValues(x0);
 
-    parser.printParser();
-
     // Define the parameters of the algorithm
     
     int k = 0;
     std::vector<double> d0(parameters.dim);
     std::vector<double> x1(parameters.dim);
-    std::vector<double> aux(parameters.dim); //This represents x(k-1) but I can't name it x-1 or xk-1
+    std::vector<double> x_old(parameters.dim); //This represents x(k-1) but I can't name it x-1 or xk-1
     std::vector<double> gradientValues_x0(parameters.dim);
 
     if constexpr (method == SecondOrderMethod::HeavyBall)
     {
-        if constexpr (Numerical_grad == "Y")
+        if constexpr (DefineGrad == "Y")
             d0 = -parameters.a0 * parser.evaluateGradientFunction(x0);
-        else if constexpr(Numerical_grad == "N")
+        else if constexpr(DefineGrad == "N")
         d0 = -parameters.a0 * parser.evaluateGradientDC(x0);
     }
     
@@ -165,16 +163,15 @@ Solution ComputeMinimum (const Parameters& parameters)
 
         // Step 1: Set x0 to be the right value and set the gradient of the function at x0
 
-        // for (int i = 0; i < parameters.dim; ++i) 
-        //     {
-        //         x0[i] = parser.getValues()[i]; 
-        //     }
-        x0 = parser.getValues();
-
-        if constexpr (Numerical_grad == "Y")
+        if constexpr (DefineGrad == "Y")
             gradientValues_x0 = parser.evaluateGradientFunction(x0);
-        else if constexpr(Numerical_grad == "N")
+        else if constexpr(DefineGrad == "N")
             gradientValues_x0 = parser.evaluateGradientDC(x0);
+        else 
+        {
+            std::cout << "Wrong choice of gradient definition" << std::endl;
+            exit(1);
+        }
 
         // Step 2: Handle the decay of the parameter alpha and update the variable x1
 
@@ -198,50 +195,45 @@ Solution ComputeMinimum (const Parameters& parameters)
             }
             else
             {
-                std::vector<double> y(x0 - parameters.eta*(x0 - aux));
+                std::vector<double> y(x0 + parameters.eta*(x0 - x_old));
 
-                if constexpr (Numerical_grad == "Y")
+                if constexpr (DefineGrad == "Y")
                     x1 = y - alpha * parser.evaluateGradientFunction(y);
-                else if constexpr(Numerical_grad == "N")
+                else if constexpr(DefineGrad == "N")
                     x1 = y - alpha * parser.evaluateGradientDC(y); 
             }
+            x_old = x0;
         }
 
         else if constexpr (method == SecondOrderMethod::HeavyBall)
         {
             x1 = x0 + d0;
             float alphak1 = handleDecay<decayType,method>(parameters, k + 1, parser, gradientValues_x0);
-            if constexpr (Numerical_grad == "Y")
+            if constexpr (DefineGrad == "Y")
                 d0 = parameters.eta * d0 - alphak1 * parser.evaluateGradientFunction(x1);
-            else if constexpr(Numerical_grad == "N")
+            else if constexpr(DefineGrad == "N")
                 d0 = parameters.eta * d0  - alphak1 * parser.evaluateGradientDC(x1);
         }
 
-        // Step 3: Compute the norm of the gradient at x0
+        // Step 3: Compute the norm of the gradient at x0 for the stopping criteria
 
         double grad_norm_x0 = std::sqrt(std::inner_product(gradientValues_x0.begin(), gradientValues_x0.end(), gradientValues_x0.begin(), 0.0));
 
-        // Step 4: Update the parameters
+        // Step 4: Update the iteration counter
 
         k++;
 
-        // Step 5: Update the values
-
-        parser.setValues(x1);
-
-        // Step 6: Check the stopping criteria
+        // Step 5: Check the stopping criteria
 
         if (distance(x1, x0) < parameters.tol_r || grad_norm_x0 < parameters.tol_s) 
         {
             break;
         }
         
-        // Step 7: Update the aux variable for Nestorov method
+        // Step 6: Update xk 
 
-        if constexpr (method == SecondOrderMethod::Nesterov)
-        {
-            aux = x0;
-        }
+        x0 = x1;
+
     }
     
     Solution solution;
@@ -307,21 +299,49 @@ void readFunctionAndGradient(std::vector<double>& initial_values, my_Parser& par
 
     // Read the function and gradient from the JSON file
     std::string function = j["function"];
-    std::vector<std::string> gradient = j["gradient"];
-    initial_values = j["initial_values"].get<std::vector<double>>();;
+    initial_values = j["initial_values"].get<std::vector<double>>();
+    std::vector<std::string> gradient(initial_values.size());
 
-    // Check that the sizes match
-    if (static_cast<size_t>(parameters.dim) != initial_values.size() || static_cast<size_t>(parameters.dim) != gradient.size()) 
-    {
-    throw std::runtime_error("Mismatch between problem dimension and size of initial values or gradient");
-    }
+    // Set the function 
 
-    // Set the function and gradient
     parser.setFunction(function);
-    for (int i = 0; i < parameters.dim; ++i) 
+
+
+    // Check if the gradient has been passed
+
+    if constexpr (DefineGrad == "Y")
     {
-        parser.setGradientFunction(i, gradient[i]);
+        
+        gradient = j["gradient"];
+
+        // Check that the sizes match
+
+        if (static_cast<size_t>(parameters.dim) != initial_values.size() || static_cast<size_t>(parameters.dim) != gradient.size()) 
+        {
+            throw std::runtime_error("Mismatch between problem dimension and size of initial values or gradient");
+        }
+
+        // Define Grad
+
+        for (int i = 0; i < parameters.dim; ++i) 
+        {
+            parser.setGradientFunction(i, gradient[i]);
+        }
     }
+
+    else if constexpr (DefineGrad == "N")
+    {
+        if (static_cast<size_t>(parameters.dim) != initial_values.size()) 
+        {
+            throw std::runtime_error("Mismatch between problem dimension and size of initial values");
+        }
+    }
+    else 
+    {
+        std::cout << "Wrong choice of gradient definition" << std::endl;
+        exit(1);
+    }
+    
 }
 
 double distance(const std::vector<double>& x1, const std::vector<double>& x0) 

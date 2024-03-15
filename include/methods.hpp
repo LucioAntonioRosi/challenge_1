@@ -6,22 +6,23 @@
 
 enum DecayType 
 {
-    Exponential,
-    Inverse,
-    Armijo
+    Exponential,    // 0
+    Inverse,        // 1
+    Armijo          // 2
 };
 
 enum SecondOrderMethod 
 {
-    None,
-    HeavyBall,
-    Nesterov
+    None,           // 0 
+    HeavyBall,      // 1
+    Nesterov,       // 2
+    Adam            // 3
 };
 
 // Choose your decay type
 
-constexpr std::string_view Numerical_grad = "Y";
-constexpr DecayType decay = DecayType::Inverse;
-constexpr SecondOrderMethod method = SecondOrderMethod::Nesterov;
+constexpr std::string_view DefineGrad = "N";
+constexpr DecayType decay = DecayType::Exponential;
+constexpr SecondOrderMethod method = SecondOrderMethod::HeavyBall;
 
 #endif // HH_METHODS_HH

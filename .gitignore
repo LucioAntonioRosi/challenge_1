@@ -32,6 +32,4 @@
 *.app
 main
 
-#Ignore yourself
 
-.gitignore
