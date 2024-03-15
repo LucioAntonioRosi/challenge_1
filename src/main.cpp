@@ -14,8 +14,11 @@ struct Parameters
     float a0;
     float eta;
     float mu;
-    int dim;
     float sigma;
+    float beta1;
+    float beta2;
+    float epsilon;
+    int dim;
     float tol_r;
     float tol_s;
     int iter;
@@ -32,30 +35,8 @@ struct Solution
 // Define the operators
 
 std::vector<double> operator*(double, const std::vector<double>&);
-
-
-// std::function<std::vector<double>(const std::vector<double>&, const std::vector<double>&)> subtract = 
-//     [](const std::vector<double>& vec1, const std::vector<double>& vec2) {
-//         std::vector<double> result(vec1.size());
-//         std::transform(vec1.begin(), vec1.end(), vec2.begin(), result.begin(), std::minus<double>());
-//         return result;
-//     };
-
-// std::function<std::vector<double>(const std::vector<double>&, const std::vector<double>&)> add = 
-//     [](const std::vector<double>& vec1, const std::vector<double>& vec2) {
-//         std::vector<double> result(vec1.size());
-//         std::transform(vec1.begin(), vec1.end(), vec2.begin(), result.begin(), std::plus<double>());
-//         return result;
-//     };
-
-// std::vector<std::function<std::vector<double>(const std::vector<double>&, const std::vector<double>&)>> operation;
-
-// operation.push_back(add);
-// operation.push_back(subtract);
-
-
- std::vector<double> operator-(const std::vector<double>&, const std::vector<double>&);
- std::vector<double> operator+(const std::vector<double>&, const std::vector<double>&);
+std::vector<double> operator-(const std::vector<double>&, const std::vector<double>&);
+std::vector<double> operator+(const std::vector<double>&, const std::vector<double>&);
 
 // Define the function to handle the decay
 
@@ -145,9 +126,11 @@ Solution ComputeMinimum (const Parameters& parameters)
     
     int k = 0;
     std::vector<double> d0(parameters.dim);
-    std::vector<double> x1(parameters.dim);
+    std::vector<double> x1(parameters.dim,0.0);
     std::vector<double> x_old(parameters.dim); //This represents x(k-1) but I can't name it x-1 or xk-1
     std::vector<double> gradientValues_x0(parameters.dim);
+    std::vector<double> m(parameters.dim,0.0);
+    std::vector<double> v(parameters.dim,0.0);
 
     if constexpr (method == SecondOrderMethod::HeavyBall)
     {
@@ -156,6 +139,7 @@ Solution ComputeMinimum (const Parameters& parameters)
         else if constexpr(DefineGrad == "N")
         d0 = -parameters.a0 * parser.evaluateGradientDC(x0);
     }
+    
     
 
 
@@ -173,7 +157,7 @@ Solution ComputeMinimum (const Parameters& parameters)
             exit(1);
         }
 
-        // Step 2: Handle the decay of the parameter alpha and update the variable x1
+        // Step 2: Handle the decay of the parameter alpha and update the variable x1 based on the method used
 
         if constexpr (method == SecondOrderMethod::None)
         {
@@ -213,6 +197,44 @@ Solution ComputeMinimum (const Parameters& parameters)
                 d0 = parameters.eta * d0 - alphak1 * parser.evaluateGradientFunction(x1);
             else if constexpr(DefineGrad == "N")
                 d0 = parameters.eta * d0  - alphak1 * parser.evaluateGradientDC(x1);
+        }
+            
+        else if constexpr (method == SecondOrderMethod::Adam)
+        {
+            float alpha = handleDecay<decayType,method>(parameters, k, parser, gradientValues_x0);
+            
+            auto power_func_vec = [](double power, const std::vector<double>& vec)
+            {
+                std::vector<double> result(vec.size());
+                std::transform(vec.begin(), vec.end(), result.begin(), [power](double num) {
+                    return std::pow(num, power);
+                });
+                return result;
+            };
+
+            std::vector<double> grad_norm_x0 = power_func_vec(2, gradientValues_x0);
+
+            m = parameters.beta1 * m + (1 - parameters.beta1) * gradientValues_x0;
+            v = parameters.beta2 * v + (1 - parameters.beta2) * grad_norm_x0;
+            
+            auto power_func = [](double beta1, int k) 
+            {
+                return std::pow(beta1, k + 1);
+            };
+            
+            std::vector<double> m_hat = (1/(1 - power_func(parameters.beta1, k))) * m;
+            std::vector<double> v_hat = (1/(1 - power_func(parameters.beta2, k))) * v;         
+            
+            for(int i = 0; i < parameters.dim; ++i)
+            {   
+                x1[i] = x0[i] - alpha * m_hat[i] / (std::sqrt(v_hat[i]) + parameters.epsilon);
+            }  
+        }
+
+        else 
+        {
+            std::cout << "Wrong choice of second order method" << std::endl;
+            exit(1);
         }
 
         // Step 3: Compute the norm of the gradient at x0 for the stopping criteria
@@ -275,6 +297,9 @@ Parameters readParameters(const std::string& filename)
     parameters.a0 = j["a0"];
     parameters.eta = j["eta"];
     parameters.mu = j["mu"];
+    parameters.beta1 = j["beta1"];
+    parameters.beta2 = j["beta2"];  
+    parameters.epsilon = j["epsilon"];
     parameters.dim = j["dim"];
     parameters.sigma = j["sigma"];
     parameters.tol_r = j["tol_r"];
@@ -297,14 +322,14 @@ void readFunctionAndGradient(std::vector<double>& initial_values, my_Parser& par
     nlohmann::json j;
     file >> j;
 
-    // Read the function and gradient from the JSON file
-    std::string function = j["function"];
+    // Read the initial values and gradient from the JSON file
+
     initial_values = j["initial_values"].get<std::vector<double>>();
     std::vector<std::string> gradient(initial_values.size());
 
     // Set the function 
 
-    parser.setFunction(function);
+    parser.setFunction(j["function"]);
 
 
     // Check if the gradient has been passed

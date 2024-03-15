@@ -1,6 +1,8 @@
 # challenge_1
 
-ahah
+'''
+    make
+
 
 
 ## CAN USE THIS FOR ALPHA0

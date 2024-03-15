@@ -23,6 +23,6 @@ enum SecondOrderMethod
 
 constexpr std::string_view DefineGrad = "N";
 constexpr DecayType decay = DecayType::Exponential;
-constexpr SecondOrderMethod method = SecondOrderMethod::HeavyBall;
+constexpr SecondOrderMethod method = SecondOrderMethod::Adam;
 
 #endif // HH_METHODS_HH
