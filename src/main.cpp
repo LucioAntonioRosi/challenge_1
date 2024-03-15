@@ -411,41 +411,22 @@ void printSolution(const Solution& sol)
     // Check if the solution has converged
     if (sol.converged) 
     {
+        std::cout << "\n\n-----------------------------------\n";
         std::cout << "Solution Converged at iteration: " << sol.iter << "\n";
-        std::cout << "-----------------------------------\n";
-
-        // Print the decay type
-        std::cout << "Decay Type: " << decay << "\n";
-
-        // Print the method used
-        std::cout << "Method Used: " << method << "\n";
-
-        // Print the minimum coordinates
-        std::cout << "The minimum is at: (";
-        for (size_t i = 0; i < sol.minimum_coords.size(); ++i) 
-        {
-            std::cout << sol.minimum_coords[i];
-            if (i != sol.minimum_coords.size() - 1) 
-            {
-                std::cout << ", ";
-            }
-        }
-        std::cout << ")\n";
-
-        // Print the minimum value
-        std::cout << "With corresponding value at: " << sol.minimum << "\n";
-
         std::cout << "-----------------------------------\n";
     }
     else 
     {
-        std::cout << "The algorithm did not converge.\n";
+        std::cout << "\n\n-----------------------------------\n";
+        std::cout << "The algorithm did not converge...\n(Or maybe you set the number of iterations too low)\nAnyway, here is the last solution found:\n";
+        std::cout << "-----------------------------------\n";
+    }
 
         // Print the decay type
-        std::cout << "Decay Type: " << decay << "\n";
+        std::cout << "Decay Type: " << decayToString(decay) << "\n";
 
         // Print the method used
-        std::cout << "Method Used: " << method << "\n";
+        std::cout << "Method Used: " << methodToString(method) << "\n\n";
 
         // Print the minimum coordinates
         std::cout << "The minimum found is at: (";
@@ -460,26 +441,7 @@ void printSolution(const Solution& sol)
         std::cout << ")\n";
 
         // Print the minimum value
-        std::cout << "With corresponding value at: " << sol.minimum << "\n";
+        std::cout << "With corresponding value: " << sol.minimum << "\n";
 
         std::cout << "-----------------------------------\n";
-
-
-    }
 }
-
-// std::function<std::vector<double>(const std::vector<double>&, const std::vector<double>&)> subtract = 
-//     [](const std::vector<double>& vec1, const std::vector<double>& vec2) 
-//     {
-//         std::vector<double> result(vec1.size());
-//         std::transform(vec1.begin(), vec1.end(), vec2.begin(), result.begin(), std::minus<double>());
-//         return result;
-//     };
-
-// std::function<std::vector<double>(const std::vector<double>&, const std::vector<double>&)> add = 
-//     [](const std::vector<double>& vec1, const std::vector<double>& vec2) 
-//     {
-//         std::vector<double> result(vec1.size());
-//         std::transform(vec1.begin(), vec1.end(), vec2.begin(), result.begin(), std::plus<double>());
-//         return result;
-//     };

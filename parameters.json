@@ -8,7 +8,7 @@
     "epsilon": 1e-8,
     "tol_r": 1e-6,
     "tol_s": 1e-6,
-    "iter": 10000,
+    "iter": 1000,
     "dim": 2,
     "function": "x0 * x1 + 4 * x0 ^ 4 + x1 ^ 2 + 3*x0",
     "gradient": ["x1 + 16 * x0 ^ 3 + 3", "x0 + 2 * x1"],

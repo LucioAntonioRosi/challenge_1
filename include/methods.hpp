@@ -25,4 +25,28 @@ constexpr std::string_view DefineGrad = "N";
 constexpr DecayType decay = DecayType::Exponential;
 constexpr SecondOrderMethod method = SecondOrderMethod::Adam;
 
+
+// Define auxiliary functions for the print of the solutions
+
+std::string decayToString(DecayType decay) 
+{
+    switch (decay) {
+        case DecayType::Exponential: return "Exponential";
+        case DecayType::Inverse: return "Inverse";
+        case DecayType::Armijo: return "Armijo";
+        default: return "Unknown";
+    }
+}
+
+std::string methodToString(SecondOrderMethod method) 
+{
+    switch (method) {
+        case SecondOrderMethod::None: return "None";
+        case SecondOrderMethod::HeavyBall: return "HeavyBall";
+        case SecondOrderMethod::Nesterov: return "Nesterov";
+        case SecondOrderMethod::Adam: return "Adam";
+        default: return "Unknown";
+    }
+}
+
 #endif // HH_METHODS_HH
