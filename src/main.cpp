@@ -360,6 +360,7 @@ void readFunctionAndGradient(std::vector<double>& initial_values, my_Parser& par
         {
             throw std::runtime_error("Mismatch between problem dimension and size of initial values");
         }
+        
     }
     else 
     {
