@@ -49,7 +49,7 @@ constexpr SecondOrderMethod method = SecondOrderMethod::Adam;
 
 // Define auxiliary functions for the print of the solutions
 
-std::string decayToString(const DecayType decay) const
+std::string decayToString(const DecayType decay)
 {
     switch (decay) {
         case DecayType::Exponential: return "Exponential";
@@ -59,7 +59,7 @@ std::string decayToString(const DecayType decay) const
     }
 }
 
-std::string methodToString(const SecondOrderMethod method) const
+std::string methodToString(const SecondOrderMethod method)
 {
     switch (method) {
         case SecondOrderMethod::None: return "None";
