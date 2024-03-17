@@ -31,8 +31,8 @@ enum SecondOrderMethod
 
 
 constexpr std::string_view DefineGrad = "N";
-constexpr DecayType decay = DecayType::Exponential;
-constexpr SecondOrderMethod method = SecondOrderMethod::Adam;
+constexpr DecayType decay = DecayType::Armijo;
+constexpr SecondOrderMethod method = SecondOrderMethod::None;
 
 
 
