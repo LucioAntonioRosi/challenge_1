@@ -1,21 +1,29 @@
 # CHALLENGE 1
 
-> This is the first challenge ya 23/24 of the PACS course. Since it is for the PACS course, I assume you have
-> set environment in the directory **"pacs-example"**. If not, follow the instructions provided by prof. 
-> Formaggia in the Extra to be able to use **"MuParserX"** and **"json files"**.
+> This is the first challenge ya 23/24 of the PACS course. Since it is for the PACS course, I assume you have set environment in the directory **"pacs-example"**. If not, follow the instructions provided by prof. Formaggia in the Extra to be able to use **"MuParserX"**, **"gnuplot"**, **"Boost"** and **"json files"**.
 
 ## How to **MAKE**
 
-First, go into the **Makefile** and change the variable  **PACS_ROOT** to your working directory where the examples reside.
+First, go into the **Makefile** and change the variable  **PACS_ROOT** to your working directory where the examples reside. Then, you have to load the necessary modules:
+> ``` bash
+>     module load boost
+> ```
+
 Then, if you have already installed the Extras, copy the following line to **make** and **run** the executable.
 > ``` bash
 >     make; ./main
 > ```
+
 Once you have your **main,** if you only need to change the parameters in **parameters.json** you can simply change them in the .json file and copy the following line in your terminal. (Basically you do not need to make the executable from scratch unless you want to change the methods used to solve the Minimum Problem).
 > ``` bash
 >     ./main
 > ```
+**ONLY IF YOU ARE IN 2D** you can add the option "plot" to have a plot which shows the convergence of the iterative method:
+> ``` bash
+>     ./main plot
+> ```
 On the other hand, if you want to change the Methods used (you can choose between [Exponential,Inverse,Armijo] for the decay rate, [None,HeavyBall,Nesterov,Adam] for the "Second order Methods" and between ["Y","N"] if you want to define your gradient by yourself or if you only want to provide the function, and the gradient will be approximated) you first go to **methods.hpp** in the **include** directory, make the changes and then type in your command line
+
 > ``` bash
 >     make distclean; make; ./main
 > ```

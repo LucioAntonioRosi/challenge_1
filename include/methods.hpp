@@ -1,3 +1,7 @@
+/* THIS FILE CONTAINS THE VARIABLES 
+    THAT YOU CAN CHANGE TO TEST THE CODE.
+    SEE BELOW FOR MORE DETAILS.*/
+
 #ifndef HH_METHODS_HH
 #define HH_METHODS_HH
 
@@ -19,9 +23,6 @@ enum SecondOrderMethod
 };
 
 
-
-
-
 //################################################################################
 //#                                                                              #                      
 //#             BELOW HERE ARE THE VARIABLES THAT YOU CAN CHANGE!!               #
@@ -30,8 +31,8 @@ enum SecondOrderMethod
 
 
 
-constexpr std::string_view DefineGrad = "N";
-constexpr DecayType decay = DecayType::Armijo;
+constexpr std::string_view DefineGrad = "Y";
+constexpr DecayType decay = DecayType::Inverse;
 constexpr SecondOrderMethod method = SecondOrderMethod::None;
 
 
@@ -47,7 +48,7 @@ constexpr SecondOrderMethod method = SecondOrderMethod::None;
 
 
 
-// Define auxiliary functions for the print of the solutions
+// Define auxiliary functions used only in the solution header file 
 
 std::string decayToString(const DecayType decay)
 {

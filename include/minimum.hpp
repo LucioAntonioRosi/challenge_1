@@ -1,9 +1,15 @@
+/* THIS IS THE MAIN HEADER, WHERE THE FUNCTION TO COMPUTE THE MINIMUM IS DEFINED. 
+   IT USES THE PARSER CLASS TO EVALUATE THE FUNCTION AND ITS GRADIENT. IT ALSO USES 
+   THE PARAMETERS CLASS TO READ THE PARAMETERS FROM THE JSON FILE. HERE IT IS ALSO
+   DEFINED THE FUNCTION THAT HANDLES THE DECAY OF THE PARAMETER ALPHA.*/
+
 #ifndef HPP_MINIMUM_HPP
 #define HPP_MINIMUM_HPP
 
 #include <cmath>
 #include "solution.hpp"
 #include "parameters.hpp"
+#include <limits>
 
 
 // Define the operators
@@ -45,6 +51,9 @@ std::vector<double> operator+(const std::vector<double>& v1, const std::vector<d
     return result;
 }
 
+
+// Define the function to handle the decay of the parameter alpha at every iteration
+
 template<DecayType decayType, SecondOrderMethod method>
 float handleDecay(const Parameters & parameters, int k, my_Parser & parser, const std::vector<double> & grad_evals)
 {
@@ -77,9 +86,14 @@ float handleDecay(const Parameters & parameters, int k, my_Parser & parser, cons
     }
 }
 
+// Define the function to compute the minimum
+
 template<DecayType decayType, SecondOrderMethod method>
-Solution ComputeMinimum (const Parameters& parameters)
+Solution ComputeMinimum (const Parameters& parameters, std::vector<std::pair<double,double>> &results)
 {
+    if(parameters.dim == 2)
+        results.reserve(parameters.iter);
+
     my_Parser parser(parameters.dim);
 
     std::vector<double> x0;
@@ -93,6 +107,8 @@ Solution ComputeMinimum (const Parameters& parameters)
     // Define the different variables for the algorithm
     
     int k = 0;
+    bool isnan = false;
+
     std::vector<double> d0(parameters.dim);
     std::vector<double> x1(parameters.dim,0.0);
     std::vector<double> x_old(parameters.dim); //This represents x(k-1) but I can't name it x-1 or xk-1
@@ -107,11 +123,11 @@ Solution ComputeMinimum (const Parameters& parameters)
         else if constexpr(DefineGrad == "N")
         d0 = -parameters.a0 * parser.evaluateGradientDC(x0);
     }
-    
-    
-
 
     while (k < parameters.iter) {
+
+        if (parameters.dim == 2)
+            results.push_back(std::make_pair(x0[0], x0[1]));
 
         // Step 1: Set x0 to be the right value and set the gradient of the function at x0
 
@@ -213,9 +229,21 @@ Solution ComputeMinimum (const Parameters& parameters)
 
         k++;
 
-        // Step 5: Check the stopping criteria
+        // Step 5: Check the stopping criteria (and if i got nan)
+        
+        std::cout << "At iteration: " << k << " Vector x1 is: " << x1[0] << " " << x1[1] << std::endl; 
 
-        if (distance(x1, x0) < parameters.tol_r || grad_norm_x0 < parameters.tol_s) 
+        for (int i = 0; i < parameters.dim ; ++i)
+        { 
+            if ( x1[i] == std::numeric_limits<double>::quiet_NaN() || x1[i] == -std::numeric_limits<double>::quiet_NaN()
+            || x1[i] == std::numeric_limits<double>::infinity() || x1[i] == -std::numeric_limits<double>::infinity())
+            {
+                isnan = true;      
+            }
+        }
+        
+
+        if (distance(x1, x0) < parameters.tol_r || grad_norm_x0 < parameters.tol_s || isnan) 
         {
             break;
         }
@@ -227,6 +255,8 @@ Solution ComputeMinimum (const Parameters& parameters)
     }
     
     Solution solution;
+
+    solution.isNaN = isnan;
 
     if (k < parameters.iter)
     { 

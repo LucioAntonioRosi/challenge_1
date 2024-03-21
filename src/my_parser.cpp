@@ -84,7 +84,7 @@ std::vector<double> my_Parser::evaluateGradientFunction(const std::vector<double
     return evaluateGradientFunction();
 }
 
-double my_Parser::evaluatePartialDer(const std::vector<double>& args, int index) 
+double my_Parser::evaluatePartialDerDC(const std::vector<double>& args, int index, const float h)
 {
     std::vector<double> args_pos(args),args_neg(args);
     args_pos[index] += h;
@@ -94,14 +94,14 @@ double my_Parser::evaluatePartialDer(const std::vector<double>& args, int index)
     return result; 
 }
     
-std::vector<double> my_Parser::evaluateGradientDC(const std::vector<double>& args) 
+std::vector<double> my_Parser::evaluateGradientDC(const std::vector<double>& args, const float h) 
 {
     std::vector<double> result;
     result.reserve(grad.size());
     int n = args.size();
     for (int i = 0; i < n; ++i) 
     {
-        result.push_back(evaluatePartialDer(args, i));
+        result.push_back(evaluatePartialDerDC(args, i, h));
     }
     return result;
 }

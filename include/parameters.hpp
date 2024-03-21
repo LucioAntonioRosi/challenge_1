@@ -1,3 +1,8 @@
+/*THIS IS THE HEADER FILE FOR THE PARAMETERS CLASS. 
+IT READS THE PARAMETERS FROM THE JSON FILE AND SETS 
+THE FUNCTION AND GRADIENT IN THE PARSER CLASS.*/
+
+
 #ifndef HPP_PARAMETERS_HPP
 #define HPP_PARAMETERS_HPP
 
@@ -23,11 +28,11 @@ struct Parameters
     int iter;
 };
 
-Parameters readParameters(const std::string& filename)
+Parameters readParameters()
 {
     // Open the file
 
-    std::ifstream file(filename);
+    std::ifstream file("parameters.json");
     if (!file) {
         std::cerr << "Unable to open file json";
         exit(1);
@@ -59,13 +64,14 @@ Parameters readParameters(const std::string& filename)
 void readFunctionAndGradient(std::vector<double>& initial_values, my_Parser& parser, const Parameters& parameters) 
 {
     // Open the JSON file
+
     std::ifstream file("parameters.json");
     if (!file) 
     {
         throw std::runtime_error("Could not open file parameters.json");
     }
 
-    // Parse the JSON file
+    
     nlohmann::json j;
     file >> j;
 
@@ -74,7 +80,7 @@ void readFunctionAndGradient(std::vector<double>& initial_values, my_Parser& par
     initial_values = j["initial_values"].get<std::vector<double>>();
     std::vector<std::string> gradient(initial_values.size());
 
-    // Set the function 
+    // Set the function's expression 
 
     parser.setFunction(j["function"]);
 
@@ -90,7 +96,7 @@ void readFunctionAndGradient(std::vector<double>& initial_values, my_Parser& par
 
         if (static_cast<size_t>(parameters.dim) != initial_values.size() || static_cast<size_t>(parameters.dim) != gradient.size()) 
         {
-            throw std::runtime_error("Mismatch between problem dimension and size of initial values or gradient");
+            throw std::runtime_error("Mismatch between problem dimension, size of initial values or gradient");
         }
 
         // Define Grad
@@ -103,6 +109,8 @@ void readFunctionAndGradient(std::vector<double>& initial_values, my_Parser& par
 
     else if constexpr (DefineGrad == "N")
     {
+        // If the gradient is not defined, only check that the sizes match
+
         if (static_cast<size_t>(parameters.dim) != initial_values.size()) 
         {
             throw std::runtime_error("Mismatch between problem dimension and size of initial values");
