@@ -229,9 +229,7 @@ Solution ComputeMinimum (const Parameters& parameters, std::vector<std::pair<dou
 
         k++;
 
-        // Step 5: Check the stopping criteria (and if i got nan)
-        
-        std::cout << "At iteration: " << k << " Vector x1 is: " << x1[0] << " " << x1[1] << std::endl; 
+        // Step 5: Check the stopping criteria (and if i got nan) 
 
         for (int i = 0; i < parameters.dim ; ++i)
         { 
