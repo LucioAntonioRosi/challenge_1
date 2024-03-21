@@ -33,7 +33,7 @@ enum SecondOrderMethod
 
 constexpr std::string_view DefineGrad = "Y";
 constexpr DecayType decay = DecayType::Inverse;
-constexpr SecondOrderMethod method = SecondOrderMethod::None;
+constexpr SecondOrderMethod method = SecondOrderMethod::HeavyBall;
 
 
 

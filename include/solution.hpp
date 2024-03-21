@@ -70,29 +70,29 @@ void printSolution(const Solution& sol)
         std::cout << "-----------------------------------\n";
 }
 
+// Function to plot the results of the optimization algorithm (only for 2D problems)
+
 void plot(const std::vector<std::pair<double,double>>& results)
 {
-    Gnuplot gp;  // Create a Gnuplot object
+    Gnuplot gp; 
 
-        // gp << "plot '-' with points title 'points'\n";
-        // Set up the plot
-        gp << "set title 'Convergence of points xk'\n";
-        gp << "set xlabel 'X'\n";
-        gp << "set ylabel 'Y'\n";
-        gp << "set grid\n";
-        gp << "set term wxt 0\n";  // Open a new wxt terminal window
-         
-        //Now start sending data
+    // Set up the plot
 
-        gp << "plot '-' with points title 'points'\n";
+    gp << "set title 'Convergence of points xk'\n";
+    gp << "set xlabel 'X'\n";
+    gp << "set ylabel 'Y'\n";
+    gp << "set grid\n";
+    gp << "set term wxt 0\n";
+    gp << "plot '-' with linespoints title 'points'\n";
 
-        for (const auto& point : results) {
-        gp << point.first << " " << point.second << "\n";
-        gp.flush();  // Flush the buffer to ensure that the point is drawn
-        //std::this_thread::sleep_for(std::chrono::milliseconds(100));  // Wait for 0.1 second
-        }
+    //Now start sending data
 
-        gp << "e\n";  // End of the plot
+    for (const auto& point : results) {
+    gp << point.first << " " << point.second << "\n";
+    gp.flush();  
+    }
+
+    gp << "e\n";  // End of dataset
 }
 
 #endif // HPP_SOLUTION_HPP
