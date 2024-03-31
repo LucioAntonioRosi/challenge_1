@@ -31,6 +31,7 @@ On the other hand, if you want to change the Methods used (you can choose betwee
 ## Warnings!!
 
 - Do not use the **Armijo** rule with any second order methods, as they may not work well together for theoretical reasons!
+  *Note: If you use a quasi-Newton scheme you can still use armijio rule, as long as you guarantee that the approximate Hessian is positive definite.*
 - When you set the parameters, be careful to define the right number of **dim** (You must be coherent)!
 
  

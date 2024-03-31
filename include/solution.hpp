@@ -10,6 +10,8 @@ FOUND BY THE OPTIMIZATION ALGORITHM.*/
 #include "gnuplot-iostream.hpp"
 
 
+
+//@note good idea store results in a struct
 struct Solution
 {
     bool converged = false;
@@ -71,7 +73,7 @@ void printSolution(const Solution& sol)
 }
 
 // Function to plot the results of the optimization algorithm (only for 2D problems)
-
+//@note nice to have a plot function
 void plot(const std::vector<std::pair<double,double>>& results)
 {
     Gnuplot gp; 

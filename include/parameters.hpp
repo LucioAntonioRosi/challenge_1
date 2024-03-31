@@ -15,6 +15,8 @@ using namespace mup;
 
 struct Parameters 
 {
+    //@note Initialize in-class to have defaults (and avoid iuninitialized variables)
+    //@note why float and not double? 
     float a0;
     float eta;
     float mu;
@@ -22,12 +24,14 @@ struct Parameters
     float beta1;
     float beta2;
     float epsilon;
+    //@note dim could be an unsigned int
     int dim;
     float tol_r;
     float tol_s;
     int iter;
 };
 
+//@note Pass the file name as argument, maybe with a defualt value. You gain in flexibility of use.
 Parameters readParameters()
 {
     // Open the file
