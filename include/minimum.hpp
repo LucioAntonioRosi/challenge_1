@@ -13,7 +13,9 @@
 
 
 // Define the operators
-
+//@note If you define a free function in a header file you should mark it as inline!!
+//inline double distance(const std::vector<double>& x1, const std::vector<double>& x0) 
+// Otherwise you have a linking error if two translation units include the header file!!!
 double distance(const std::vector<double>& x1, const std::vector<double>& x0) 
 {
     double sum = 0.0;
@@ -233,6 +235,8 @@ Solution ComputeMinimum (const Parameters& parameters, std::vector<std::pair<dou
 
         for (int i = 0; i < parameters.dim ; ++i)
         { 
+            //@note Nice try. Yet if can be simplified.We have std::isfinite that does this job for you
+            // if(!std::isfinite(x[i]) or ....)
             if ( x1[i] == std::numeric_limits<double>::quiet_NaN() || x1[i] == -std::numeric_limits<double>::quiet_NaN()
             || x1[i] == std::numeric_limits<double>::infinity() || x1[i] == -std::numeric_limits<double>::infinity())
             {

@@ -49,7 +49,7 @@ constexpr SecondOrderMethod method = SecondOrderMethod::HeavyBall;
 
 
 // Define auxiliary functions used only in the solution header file 
-
+//@note If you keep free function definitions in a header file you need to declare them inline!
 std::string decayToString(const DecayType decay)
 {
     switch (decay) {
